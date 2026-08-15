@@ -177,7 +177,43 @@ func main() {
 }
 ```
 
-### 🍎 Example 2: iOS (WebDriverAgent) Automation
+### 🦺 Example 2: TypeScript/Node.js Automation
+This is the equivalent TypeScript client test script connecting to the same Go Core server:
+
+```typescript
+import { Device } from 'morego';
+
+async function main() {
+  // 1. Connect to the local running morego server
+  const device = await Device.connect("localhost:50051", "pixel_6_pro");
+
+  try {
+    // 2. Start a test session for the Android Settings application
+    const session = await device.newSession("com.android.settings");
+
+    // 3. Perform a drag/swipe gesture (startX, startY, endX, endY, durationMs)
+    await session.swipe(500, 1500, 500, 500, 400);
+
+    // 4. Locate an element by its Resource ID and Click it
+    const searchBar = session.locator("RESOURCE_ID", "com.android.settings:id/search_action_bar");
+    await searchBar.click();
+
+    // 5. Fill input fields using the native input keyboard focus
+    const searchInput = session.locator("CLASS_NAME", "android.widget.EditText");
+    await searchInput.fill("Wi-Fi");
+
+    console.log("Search query 'Wi-Fi' entered successfully!");
+  } finally {
+    // 6. Release device resources
+    await device.close();
+  }
+}
+
+main().catch(console.error);
+```
+
+
+### 🍎 Example 3: iOS (WebDriverAgent) Automation
 This example launches the iOS Settings application via WebDriverAgent, performs a vertical scroll, and taps the "General" category.
 
 ```go
@@ -223,7 +259,7 @@ func main() {
 }
 ```
 
-### 🧠 Example 3: Running with AI Self-Healing
+### 🧠 Example 4: Running with AI Self-Healing
 Self-healing is integrated natively on the core server. In your tests, if you wish to allow the AI model to dynamically repair locators when target resource IDs or text changes on new app releases, simply trigger queries using the `morego` locator engine.
 
 When a query is dispatched:
