@@ -10,12 +10,14 @@ bin/
 *.log
 test_out.log
 
-# IDE & OS cache files
+# Python cache artifacts
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE and OS cache files
 .idea/
 .vscode/
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# Vision Roadmap
-Vision.md

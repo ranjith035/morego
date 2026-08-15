@@ -281,7 +281,27 @@ func (s *server) SelfHealLocator(ctx context.Context, req *pb.SelfHealRequest) (
 
 // SuggestLocators provides locator healing hints.
 func (s *server) SuggestLocators(ctx context.Context, req *pb.SuggestLocatorsRequest) (*pb.SuggestLocatorsResponse, error) {
-	return &pb.SuggestLocatorsResponse{}, nil
+	suggestions, err := ai.SuggestLocators(req.ViewHierarchy)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid view hierarchy: %v", err)
+	}
+
+	resp := &pb.SuggestLocatorsResponse{
+		Suggestions: make([]*pb.SuggestLocatorsResponse_Suggestion, 0, len(suggestions)),
+	}
+
+	for _, suggestion := range suggestions {
+		resp.Suggestions = append(resp.Suggestions, &pb.SuggestLocatorsResponse_Suggestion{
+			Locator: &pb.Locator{
+				Strategy: mapAIStrategy(suggestion.Strategy),
+				Selector: suggestion.Selector,
+			},
+			Reason:         suggestion.Reason,
+			StabilityScore: suggestion.StabilityScore,
+		})
+	}
+
+	return resp, nil
 }
 
 // AnalyzeFailure explains stack trace error sources.
@@ -290,6 +310,29 @@ func (s *server) AnalyzeFailure(ctx context.Context, req *pb.AnalyzeFailureReque
 		Analysis:       "Simulated Failure analysis matching logs.",
 		RecommendedFix: "Ensure target element exists before timeout.",
 	}, nil
+}
+
+func mapAIStrategy(strategy string) pb.LocatorStrategy {
+	switch strategy {
+	case "ACCESSIBILITY_ID":
+		return pb.LocatorStrategy_LOCATOR_STRATEGY_ACCESSIBILITY_ID
+	case "TEST_ID":
+		return pb.LocatorStrategy_LOCATOR_STRATEGY_TEST_ID
+	case "ROLE":
+		return pb.LocatorStrategy_LOCATOR_STRATEGY_ROLE
+	case "TEXT":
+		return pb.LocatorStrategy_LOCATOR_STRATEGY_TEXT
+	case "PLACEHOLDER":
+		return pb.LocatorStrategy_LOCATOR_STRATEGY_PLACEHOLDER
+	case "LABEL":
+		return pb.LocatorStrategy_LOCATOR_STRATEGY_LABEL
+	case "RESOURCE_ID":
+		return pb.LocatorStrategy_LOCATOR_STRATEGY_RESOURCE_ID
+	case "XPATH":
+		return pb.LocatorStrategy_LOCATOR_STRATEGY_XPATH
+	default:
+		return pb.LocatorStrategy_LOCATOR_STRATEGY_UNSPECIFIED
+	}
 }
 
 func main() {

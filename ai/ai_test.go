@@ -89,3 +89,38 @@ func TestVisualLocator(t *testing.T) {
 		t.Errorf("Expected positive resolved coordinates, got X=%d, Y=%d", bounds.X, bounds.Y)
 	}
 }
+
+func TestSuggestLocators(t *testing.T) {
+	hierarchyXML := `
+	<hierarchy>
+		<node class="android.widget.FrameLayout" bounds="[0,0][1080,1920]">
+			<node class="android.widget.Button" text="Continue" resource-id="com.example:id/continue_button" content-desc="Continue" bounds="[100,200][300,280]" />
+			<node class="android.widget.EditText" text="" resource-id="com.example:id/email" content-desc="" bounds="[100,320][500,380]" />
+		</node>
+	</hierarchy>`
+
+	suggestions, err := SuggestLocators(hierarchyXML)
+	if err != nil {
+		t.Fatalf("SuggestLocators failed: %v", err)
+	}
+
+	if len(suggestions) == 0 {
+		t.Fatal("Expected locator suggestions, got none")
+	}
+
+	if suggestions[0].Strategy != "ACCESSIBILITY_ID" || suggestions[0].Selector != "Continue" {
+		t.Fatalf("Expected top suggestion to prefer accessibility id, got %+v", suggestions[0])
+	}
+
+	foundResourceID := false
+	for _, suggestion := range suggestions {
+		if suggestion.Strategy == "RESOURCE_ID" && suggestion.Selector == "com.example:id/continue_button" {
+			foundResourceID = true
+			break
+		}
+	}
+
+	if !foundResourceID {
+		t.Fatal("Expected resource-id suggestion for continue button")
+	}
+}

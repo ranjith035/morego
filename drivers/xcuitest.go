@@ -51,15 +51,11 @@ func (d *XCUITestDriver) Connect(ctx context.Context, capabilities map[string]st
 		},
 	})
 
-	resp, err := d.client.Post(d.wdaURL+"/session", "application/json", bytes.NewBuffer(reqBody))
+	resp, err := d.doRequest(ctx, http.MethodPost, d.wdaURL+"/session", reqBody)
 	if err != nil {
 		return fmt.Errorf("failed to reach WebDriverAgent at %s (is it running?): %w", d.wdaURL, err)
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("WDA returned non-ok status: %d", resp.StatusCode)
-	}
 
 	var res struct {
 		SessionID string `json:"sessionId"`
@@ -94,8 +90,7 @@ func (d *XCUITestDriver) Disconnect(ctx context.Context) error {
 		return nil
 	}
 
-	req, _ := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf("%s/session/%s", wdaURL, sessionID), nil)
-	resp, err := d.client.Do(req)
+	resp, err := d.doRequest(ctx, http.MethodDelete, fmt.Sprintf("%s/session/%s", wdaURL, sessionID), nil)
 	if err == nil {
 		resp.Body.Close()
 	}
@@ -113,7 +108,7 @@ func (d *XCUITestDriver) GetSource(ctx context.Context, format string) (string, 
 	wdaURL := d.wdaURL
 	d.mu.Unlock()
 
-	resp, err := d.client.Get(fmt.Sprintf("%s/session/%s/source", wdaURL, sessionID))
+	resp, err := d.doRequest(ctx, http.MethodGet, fmt.Sprintf("%s/session/%s/source", wdaURL, sessionID), nil)
 	if err != nil {
 		return "", err
 	}
@@ -139,7 +134,7 @@ func (d *XCUITestDriver) ClickAt(ctx context.Context, x, y int) error {
 		"y": y,
 	})
 
-	resp, err := d.client.Post(fmt.Sprintf("%s/session/%s/wda/tap/nil", wdaURL, sessionID), "application/json", bytes.NewBuffer(reqBody))
+	resp, err := d.doRequest(ctx, http.MethodPost, fmt.Sprintf("%s/session/%s/wda/tap/nil", wdaURL, sessionID), reqBody)
 	if err != nil {
 		return err
 	}
@@ -153,7 +148,7 @@ func (d *XCUITestDriver) Click(ctx context.Context, elementID string) error {
 	wdaURL := d.wdaURL
 	d.mu.Unlock()
 
-	resp, err := d.client.Post(fmt.Sprintf("%s/session/%s/element/%s/click", wdaURL, sessionID, elementID), "application/json", nil)
+	resp, err := d.doRequest(ctx, http.MethodPost, fmt.Sprintf("%s/session/%s/element/%s/click", wdaURL, sessionID, elementID), nil)
 	if err != nil {
 		return err
 	}
@@ -172,7 +167,7 @@ func (d *XCUITestDriver) Fill(ctx context.Context, elementID string, value strin
 		"value": strings.Split(value, ""),
 	})
 
-	resp, err := d.client.Post(fmt.Sprintf("%s/session/%s/element/%s/value", wdaURL, sessionID, elementID), "application/json", bytes.NewBuffer(reqBody))
+	resp, err := d.doRequest(ctx, http.MethodPost, fmt.Sprintf("%s/session/%s/element/%s/value", wdaURL, sessionID, elementID), reqBody)
 	if err != nil {
 		return err
 	}
@@ -194,7 +189,7 @@ func (d *XCUITestDriver) Swipe(ctx context.Context, startX, startY, endX, endY i
 		"duration": duration.Seconds(),
 	})
 
-	resp, err := d.client.Post(fmt.Sprintf("%s/session/%s/wda/dragfromtoforduration", wdaURL, sessionID), "application/json", bytes.NewBuffer(reqBody))
+	resp, err := d.doRequest(ctx, http.MethodPost, fmt.Sprintf("%s/session/%s/wda/dragfromtoforduration", wdaURL, sessionID), reqBody)
 	if err != nil {
 		return err
 	}
@@ -214,7 +209,7 @@ func (d *XCUITestDriver) Screenshot(ctx context.Context, elementID string) ([]by
 		url = fmt.Sprintf("%s/session/%s/element/%s/screenshot", wdaURL, sessionID, elementID)
 	}
 
-	resp, err := d.client.Get(url)
+	resp, err := d.doRequest(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -250,15 +245,11 @@ func (d *XCUITestDriver) FindElement(ctx context.Context, strategy string, selec
 		"value": selector,
 	})
 
-	resp, err := d.client.Post(fmt.Sprintf("%s/session/%s/element", wdaURL, sessionID), "application/json", bytes.NewBuffer(reqBody))
+	resp, err := d.doRequest(ctx, http.MethodPost, fmt.Sprintf("%s/session/%s/element", wdaURL, sessionID), reqBody)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("locator failed with status code %d", resp.StatusCode)
-	}
 
 	var res struct {
 		Value map[string]string `json:"value"`
@@ -283,7 +274,7 @@ func (d *XCUITestDriver) LaunchApp(ctx context.Context, appID string, args []str
 		"bundleId": appID,
 	})
 
-	resp, err := d.client.Post(fmt.Sprintf("%s/session/%s/wda/apps/launch", wdaURL, sessionID), "application/json", bytes.NewBuffer(reqBody))
+	resp, err := d.doRequest(ctx, http.MethodPost, fmt.Sprintf("%s/session/%s/wda/apps/launch", wdaURL, sessionID), reqBody)
 	if err != nil {
 		return err
 	}
@@ -301,7 +292,7 @@ func (d *XCUITestDriver) TerminateApp(ctx context.Context, appID string) error {
 		"bundleId": appID,
 	})
 
-	resp, err := d.client.Post(fmt.Sprintf("%s/session/%s/wda/apps/terminate", wdaURL, sessionID), "application/json", bytes.NewBuffer(reqBody))
+	resp, err := d.doRequest(ctx, http.MethodPost, fmt.Sprintf("%s/session/%s/wda/apps/terminate", wdaURL, sessionID), reqBody)
 	if err != nil {
 		return err
 	}
@@ -319,4 +310,32 @@ func (d *XCUITestDriver) UninstallApp(ctx context.Context, appID string) error {
 
 func (d *XCUITestDriver) ExecuteScript(ctx context.Context, script string, arguments []string) (string, error) {
 	return "", errors.New("execute script is not supported natively via WebDriverAgent")
+}
+
+func (d *XCUITestDriver) doRequest(ctx context.Context, method string, url string, body []byte) (*http.Response, error) {
+	var reader io.Reader
+	if body != nil {
+		reader = bytes.NewReader(body)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, url, reader)
+	if err != nil {
+		return nil, err
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	resp, err := d.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		return nil, fmt.Errorf("WDA %s %s returned status %d: %s", method, url, resp.StatusCode, strings.TrimSpace(string(bodyBytes)))
+	}
+
+	return resp, nil
 }
