@@ -1,0 +1,14 @@
+{
+  "name": "morego",
+  "version": "1.0.0",
+  "description": "TypeScript SDK wrapper for morego core automation engine",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.11.0",
+    "@grpc/proto-loader": "^0.7.13"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
