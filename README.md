@@ -16,7 +16,7 @@ Mobile automation is historically divided between two paradigms:
 1.  **Appium:** Programmatic, multi-language, and flexible—but slow, complex to set up, and prone to flaky tests due to legacy HTTP WebDriver protocol overhead.
 2.  **Maestro:** Fast, reliable, and low-flakiness—but restricted to static YAML files, making complex test flows (loops, database seeding, API mocking, conditional actions) difficult to implement.
 
-`morego` bridges this gap: it combines **Maestro-grade execution stability and speed** with **Playwright-style programmatic multi-language SDKs** (Go, TypeScript, Python, C#, Java, Kotlin) and premium interactive debugging tooling.
+`morego` bridges this gap: it combines **Maestro-grade execution stability and speed** with **Playwright-style programmatic multi-language SDKs** (Go, TypeScript/JavaScript, Python, and Java) and premium interactive debugging tooling.
 
 ---
 
@@ -27,7 +27,7 @@ All SDK languages act as thin, logic-free serialization layers. Element wait rou
 ```mermaid
 sequenceDiagram
     autonumber
-    participant SDK as Go Client Script (SDK)
+    participant SDK as Client SDK (Go/TS/Python/Java)
     participant Core as Go Core Server (:50051)
     participant Driver as Real Driver (ADBDriver/XCUITestDriver)
     participant Device as Mobile Device (Android/iOS)
@@ -53,8 +53,8 @@ sequenceDiagram
 
 ## 📦 System Features
 
-### 💻 1. Thin Client SDKs (`/sdk`)
-Contains **no automation logic**. All client APIs (Device, Session, Locator) serialize queries and dispatch them as gRPC frames. Clicks and text inputs perform a two-step delegation: resolving queries to W3C Element UUID tags via `FindElement` calls, then executing interactions on the resolved elements.
+### 💻 1. Multi-Language Client SDKs (`/sdk`)
+Contains **no automation logic**. Exposes standard native client packages for **Go**, **TypeScript (Node.js)**, **Python**, and **Java (Maven)**. Clicks and text inputs perform a two-step delegation: resolving queries to W3C Element UUID tags via `FindElement` calls, then executing interactions on the resolved elements over gRPC.
 
 ### 🔌 2. Native Drivers (`/drivers`)
 *   **Android (`drivers/adb.go`):** Spawns native `adb` command processes. Extracts layout XML streams to `/data/local/tmp/`, calculates layout bounds center coordinates, inputs keyboard text via `adb shell input text`, and captures frame screen buffers natively via `adb exec-out screencap -p`.
@@ -65,7 +65,7 @@ Intelligently waits for element attachments, visibility states, and layout stabi
 
 ### ✨ 4. AI-Driven Self-Healing & Auditing (`/ai`)
 *   **Self-Healing:** If an element selector fails (due to layout modifications or text edits), the AI compares the broken selector and past node history profiles against the current view tree, computes a composite similarity match score, and heals the locator on-the-fly.
-*   **Accessibility Auditing:** Scans layouts and flags clickable buttons missing content descriptions (Severity: High) or text fields missing placeholder tags (Severity: Medium).
+*   **Accessibility Auditing & Suggestions:** Scans layout structures to query AI-recommended locators based on stable element properties.
 
 ### 🖥️ 5. Interactive Web Inspector (`/inspector`)
 A high-fidelity developer dashboard that simulates mobile canvas element picking. Hovering nodes highlights matching entries in the XML UI Hierarchy tree, provides AI healed locator recommendations (with confidence percentages), and generates runnable SDK test scripts in real-time.
@@ -83,7 +83,12 @@ morego/
 ├── proto/              # Protocol Buffer (.proto) definitions & generated Go stubs
 ├── core/               # Central DI Container, Wait Engine, and Assertion Engine
 ├── drivers/            # ADB shell and WebDriverAgent HTTP REST controllers
-├── sdk/                # Fluent client SDK and runnable local sample script
+├── sdk/                # Multi-Language Client SDK Bindings
+│   ├── client.go       # Go Client core wrapper
+│   ├── typescript/     # Node.js typescript SDK
+│   ├── python/         # Python 3 SDK
+│   ├── java/           # Java 17 Maven SDK
+│   └── sample/         # Go executable sample test
 ├── cmd/                # Entrypoint starting the Go Core gRPC Server
 ├── grid/               # SaaS Cloud farm allocator, RBAC manager, and MJPEG broadcaster
 ├── ai/                 # Self-healing tree similarity calculators and accessibility audits
@@ -95,15 +100,14 @@ morego/
 
 ---
 
-## 🚦 Getting Started
+## 🚦 Getting Started & Quickstart
 
 ### 📋 Prerequisites
 *   [Go](https://go.dev/doc/install) v1.22+
-*   [Protocol Buffers Compiler (protoc)](https://protobuf.dev/) (Pre-downloaded executable helper included in workspace)
 *   **Android:** ADB CLI installed on your machine (`adb devices` must see your device).
 *   **iOS:** WebDriverAgent Xcode scheme launched on your iOS Simulator/Device.
 
-### 🛠️ 1. Building the Core Server
+### 🛠️ 1. Building and Running the Core Server
 Initialize Go Workspace modules:
 ```bash
 make init
@@ -119,22 +123,40 @@ Start the gRPC Server listening on port `50051`:
 ./bin/morego.exe
 ```
 
-### 🏃 2. Running a Test Session
-With your device connected and the server running, launch the reference test client script:
+### 🏃 2. Running a Test Session (Pick Your Language)
+
+With your device connected and the `morego` server running:
+
+#### 🐹 Go Client
 ```bash
 go run ./sdk/sample/main.go
 ```
-*This script connects to the server, starts a session on your device, executes swipe gestures, clicks search bar inputs, and enters text queries.*
+
+#### 🐍 Python Client
+```bash
+pip install grpcio grpcio-tools
+python sdk/python/sample.py
+```
+
+#### 🦺 TypeScript Client
+```bash
+cd sdk/typescript
+npm install
+npm run build
+node sample.js
+```
+
+#### ☕ Java Client
+```bash
+cd sdk/java
+mvn clean compile exec:java -Dexec.mainClass="com.morego.sdk.sample.Sample"
+```
 
 ---
 
 ## 📖 Step-by-Step Examples
 
-Here is how you can build and run programmatic tests using the `morego` SDK.
-
-### 🤖 Example 1: Android (ADB) Automation
-This example launches the Android Settings application, swipes down, locates the search field, and searches for "Wi-Fi".
-
+### 🤖 Example 1: Go (ADB) Automation
 ```go
 package main
 
@@ -149,156 +171,80 @@ import (
 func main() {
 	ctx := context.Background()
 
-	// 1. Connect to the local running morego server
+	// 1. Connect to morego core server
 	device, err := sdk.Connect(ctx, "localhost:50051", "pixel_6_pro")
 	if err != nil {
 		panic(err)
 	}
 	defer device.Close()
 
-	// 2. Start a test session for the Android Settings application
+	// 2. Start a Settings app session
 	session, err := device.NewSession(ctx, "com.android.settings", nil)
 	if err != nil {
 		panic(err)
 	}
 	defer session.Close(ctx)
 
-	// 3. Perform a drag/swipe gesture (startX, startY, endX, endY, duration)
-	err = session.Swipe(ctx, 500, 1500, 500, 500, 400*time.Millisecond)
+	// 3. Swipe gesture
+	_ = session.Swipe(ctx, 500, 1500, 500, 500, 400*time.Millisecond)
 
-	// 4. Locate an element by its Android Resource ID and Click it
+	// 4. Locate and Click search bar
 	searchBar := session.Locator("RESOURCE_ID", "com.android.settings:id/search_action_bar")
 	if err := searchBar.Click(ctx); err == nil {
-		// 5. Fill input fields using the native input keyboard focus
+		// 5. Fill input
 		searchVal := session.Locator("CLASS_NAME", "android.widget.EditText")
 		_ = searchVal.Fill(ctx, "Wi-Fi")
-		fmt.Println("Search for 'Wi-Fi' executed!")
 	}
 }
 ```
 
 ### 🦺 Example 2: TypeScript/Node.js Automation
-This is the equivalent TypeScript client test script connecting to the same Go Core server:
-
 ```typescript
-import { Device } from 'morego';
+import { Device } from './dist';
 
 async function main() {
-  // 1. Connect to the local running morego server
   const device = await Device.connect("localhost:50051", "pixel_6_pro");
 
   try {
-    // 2. Start a test session for the Android Settings application
     const session = await device.newSession("com.android.settings");
-
-    // 3. Perform a drag/swipe gesture (startX, startY, endX, endY, durationMs)
     await session.swipe(500, 1500, 500, 500, 400);
 
-    // 4. Locate an element by its Resource ID and Click it
     const searchBar = session.locator("RESOURCE_ID", "com.android.settings:id/search_action_bar");
     await searchBar.click();
 
-    // 5. Fill input fields using the native input keyboard focus
     const searchInput = session.locator("CLASS_NAME", "android.widget.EditText");
     await searchInput.fill("Wi-Fi");
-
-    console.log("Search query 'Wi-Fi' entered successfully!");
   } finally {
-    // 6. Release device resources
-    await device.close();
+    device.close();
   }
 }
 
 main().catch(console.error);
 ```
 
+### 🐍 Example 3: Python Automation
+```python
+from morego import Device
 
-### 🍎 Example 3: iOS (WebDriverAgent) Automation
-This example launches the iOS Settings application via WebDriverAgent, performs a vertical scroll, and taps the "General" category.
+def main():
+    device = Device.connect("localhost:50051", "pixel_6_pro")
+    try:
+        session = device.new_session("com.android.settings")
+        session.swipe(500, 1500, 500, 500, 400)
 
-```go
-package main
+        search_bar = session.locator("RESOURCE_ID", "com.android.settings:id/search_action_bar")
+        search_bar.click()
 
-import (
-	"context"
-	"time"
+        search_input = session.locator("CLASS_NAME", "android.widget.EditText")
+        search_input.fill("Wi-Fi")
+    finally:
+        device.close()
 
-	"github.com/ranjith035/morego/sdk"
-)
-
-func main() {
-	ctx := context.Background()
-
-	// 1. Configure iOS session capabilities
-	capabilities := map[string]string{
-		"device_id": "xcuitest",             // Routes request to the iOS WDA driver
-		"wda_url":   "http://localhost:8100", // Address of the WDA runner
-		"bundle_id": "com.apple.Preferences",  // Target App bundle
-	}
-
-	// 2. Connect to server
-	device, err := sdk.Connect(ctx, "localhost:50051", "iphone_15")
-	if err != nil {
-		panic(err)
-	}
-	defer device.Close()
-
-	// 3. Initialize the session with capabilities
-	session, err := device.NewSession(ctx, "com.apple.Preferences", capabilities)
-	if err != nil {
-		panic(err)
-	}
-	defer session.Close(ctx)
-
-	// 4. Swipe visually down the settings menu
-	_ = session.Swipe(ctx, 200, 600, 200, 200, 300*time.Millisecond)
-
-	// 5. Locate using iOS accessibility identifiers and Click
-	generalMenu := session.Locator("ACCESSIBILITY_ID", "General")
-	_ = generalMenu.Click(ctx)
-}
+if __name__ == "__main__":
+    main()
 ```
 
-### 🧠 Example 4: Running with AI Self-Healing
-Self-healing is integrated natively on the core server. In your tests, if you wish to allow the AI model to dynamically repair locators when target resource IDs or text changes on new app releases, simply trigger queries using the `morego` locator engine.
-
-When a query is dispatched:
-1. The wait engine fails to find the element using the original selector.
-2. The Go Core triggers the `HealLocator` service.
-3. The AI scans properties of current nodes, calculates a similarity score, heals the query, and executes the click transparently without failing the build.
-
-### 📐 Example 5: Spatial Relative Locating (Auto-Wait + Layout Alignment)
-Find elements relative to other visual elements on the screen without using complex XPaths:
-
-```go
-// Find a target input box that is located ABOVE a specific submit button
-submitButton := session.Locator("RESOURCE_ID", "com.example.login:id/btn_submit")
-emailInput := session.Locator("CLASS_NAME", "android.widget.EditText").Above(submitButton)
-
-// Interact with the spatially resolved locator
-_ = emailInput.Fill(ctx, "user@example.com")
-```
-
-### 🧠 Example 6: AI-Suggested Stable Locators
-Query the AI engine to get suggestions for alternative stable and robust locators for elements on the screen:
-
-```go
-// Fetch active UI tree source XML layout
-xmlSource, _ := session.GetSource(ctx, "xml")
-
-// Query AI recommendations for stable elements
-suggestions, err := device.SuggestLocators(ctx, xmlSource)
-if err == nil {
-	for _, s := range suggestions {
-		fmt.Printf("Suggested Selector: %s (Strategy: %s, Stability Score: %0.2f)\n",
-			s.Selector, s.Strategy, s.StabilityScore)
-	}
-}
-```
-
-### ☕ Example 7: Java (Maven) Automation
-This example launches the Settings app on an Android device using the compiled Java client bindings:
-
+### ☕ Example 4: Java (Maven) Automation
 ```java
 package com.morego.sdk.sample;
 
@@ -308,26 +254,43 @@ import com.morego.sdk.Locator;
 
 public class Sample {
     public static void main(String[] args) {
-        System.out.println("Connecting to morego Core Server...");
         try (Device device = Device.connect("localhost:50051", "pixel_6_pro")) {
             Session session = device.newSession("com.android.settings");
-            
-            // Execute swipe
             session.swipe(500, 1500, 500, 500, 400);
 
-            // Locate and Click search bar
             Locator searchBar = session.locator("RESOURCE_ID", "com.android.settings:id/search_action_bar");
             searchBar.click();
-            
-            // Fill input text
+
             Locator searchInput = session.locator("CLASS_NAME", "android.widget.EditText");
             searchInput.fill("Wi-Fi");
-            
-            System.out.println("Java Settings Search execution completed!");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+}
+```
+
+### 📐 Example 5: Spatial Relative Locating
+Find elements relative to other visual elements on the screen:
+```go
+// Find a target input box that is located ABOVE a specific submit button
+submitButton := session.Locator("RESOURCE_ID", "com.example.login:id/btn_submit")
+emailInput := session.Locator("CLASS_NAME", "android.widget.EditText").Above(submitButton)
+
+_ = emailInput.Fill(ctx, "user@example.com")
+```
+
+### 🧠 Example 6: AI-Suggested Stable Locators
+Query the AI engine to get suggestions for alternative stable and robust locators:
+```go
+xmlSource, _ := session.GetSource(ctx, "xml")
+
+suggestions, err := device.SuggestLocators(ctx, xmlSource)
+if err == nil {
+	for _, s := range suggestions {
+		fmt.Printf("Suggested Selector: %s (Strategy: %s, Stability Score: %0.2f)\n",
+			s.Selector, s.Strategy, s.StabilityScore)
+	}
 }
 ```
 
@@ -338,11 +301,10 @@ public class Sample {
 We welcome and appreciate all contributions! `morego` is built from first principles with a clean dependency-injection design, making it highly modular and easy for new developers to explore and extend.
 
 ### 🗺️ Our Active Roadmap (Areas to Contribute)
-We have identified several high-impact areas where you can make a significant difference:
-1.  **🐍 Multi-Language Client SDKs:** Help write the Python, Java, or C# fluent reference client wrappers.
-2.  **🖱️ Custom Desktop Drivers:** Extend the driver registry to support macOS / Windows desktop application automation.
-3.  **🤖 Advanced AI Healing Models:** Train and integrate semantic similarity heaters to match elements by natural language labels.
-4.  **📊 Custom Dashboard Exporters:** Add new reporting adapters (e.g. Slack/Teams notifications, PDF generation, or visual regression comparisons).
+*   **🐍 Multi-Language Client SDKs:** Add more helper functions and properties to TypeScript, Python, and Java wrappers.
+*   **🖱️ Custom Desktop Drivers:** Extend the driver registry to support macOS / Windows desktop application automation.
+*   **🤖 Advanced AI Healing Models:** Train and integrate semantic similarity heaters to match elements by natural language labels.
+*   **📊 Custom Dashboard Exporters:** Add new reporting adapters (Slack alerts, PDF exporters, or visual regression comparisons).
 
 ### 🛠️ Setting Up for Contribution
 1. Fork and clone the repository.
@@ -355,21 +317,7 @@ We have identified several high-impact areas where you can make a significant di
    make fmt
    make lint
    ```
-4. Read our comprehensive [Contributing Guidelines](docs/contributing.md) to learn about code styles, pull request templates, and testing rules.
-
----
-
-### 🧪 3. Running Workspace Tests
-Execute unit and integration tests across all modules:
-```bash
-go test ./...
-```
-
-Ensure formatting compliance:
-```bash
-make fmt
-make lint
-```
+4. Read our comprehensive [Contributing Guidelines](docs/contributing.md).
 
 ---
 
