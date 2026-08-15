@@ -126,6 +126,113 @@ go run ./sdk/sample/main.go
 ```
 *This script connects to the server, starts a session on your device, executes swipe gestures, clicks search bar inputs, and enters text queries.*
 
+---
+
+## 📖 Step-by-Step Examples
+
+Here is how you can build and run programmatic tests using the `morego` SDK.
+
+### 🤖 Example 1: Android (ADB) Automation
+This example launches the Android Settings application, swipes down, locates the search field, and searches for "Wi-Fi".
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/ranjith035/morego/sdk"
+)
+
+func main() {
+	ctx := context.Background()
+
+	// 1. Connect to the local running morego server
+	device, err := sdk.Connect(ctx, "localhost:50051", "pixel_6_pro")
+	if err != nil {
+		panic(err)
+	}
+	defer device.Close()
+
+	// 2. Start a test session for the Android Settings application
+	session, err := device.NewSession(ctx, "com.android.settings", nil)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close(ctx)
+
+	// 3. Perform a drag/swipe gesture (startX, startY, endX, endY, duration)
+	err = session.Swipe(ctx, 500, 1500, 500, 500, 400*time.Millisecond)
+
+	// 4. Locate an element by its Android Resource ID and Click it
+	searchBar := session.Locator("RESOURCE_ID", "com.android.settings:id/search_action_bar")
+	if err := searchBar.Click(ctx); err == nil {
+		// 5. Fill input fields using the native input keyboard focus
+		searchVal := session.Locator("CLASS_NAME", "android.widget.EditText")
+		_ = searchVal.Fill(ctx, "Wi-Fi")
+		fmt.Println("Search for 'Wi-Fi' executed!")
+	}
+}
+```
+
+### 🍎 Example 2: iOS (WebDriverAgent) Automation
+This example launches the iOS Settings application via WebDriverAgent, performs a vertical scroll, and taps the "General" category.
+
+```go
+package main
+
+import (
+	"context"
+	"time"
+
+	"github.com/ranjith035/morego/sdk"
+)
+
+func main() {
+	ctx := context.Background()
+
+	// 1. Configure iOS session capabilities
+	capabilities := map[string]string{
+		"device_id": "xcuitest",             // Routes request to the iOS WDA driver
+		"wda_url":   "http://localhost:8100", // Address of the WDA runner
+		"bundle_id": "com.apple.Preferences",  // Target App bundle
+	}
+
+	// 2. Connect to server
+	device, err := sdk.Connect(ctx, "localhost:50051", "iphone_15")
+	if err != nil {
+		panic(err)
+	}
+	defer device.Close()
+
+	// 3. Initialize the session with capabilities
+	session, err := device.NewSession(ctx, "com.apple.Preferences", capabilities)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close(ctx)
+
+	// 4. Swipe visually down the settings menu
+	_ = session.Swipe(ctx, 200, 600, 200, 200, 300*time.Millisecond)
+
+	// 5. Locate using iOS accessibility identifiers and Click
+	generalMenu := session.Locator("ACCESSIBILITY_ID", "General")
+	_ = generalMenu.Click(ctx)
+}
+```
+
+### 🧠 Example 3: Running with AI Self-Healing
+Self-healing is integrated natively on the core server. In your tests, if you wish to allow the AI model to dynamically repair locators when target resource IDs or text changes on new app releases, simply trigger queries using the `morego` locator engine.
+
+When a query is dispatched:
+1. The wait engine fails to find the element using the original selector.
+2. The Go Core triggers the `HealLocator` service.
+3. The AI scans properties of current nodes, calculates a similarity score, heals the query, and executes the click transparently without failing the build.
+
+---
+
 ### 🧪 3. Running Workspace Tests
 Execute unit and integration tests across all modules:
 ```bash
