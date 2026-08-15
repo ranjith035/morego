@@ -267,6 +267,61 @@ When a query is dispatched:
 2. The Go Core triggers the `HealLocator` service.
 3. The AI scans properties of current nodes, calculates a similarity score, heals the query, and executes the click transparently without failing the build.
 
+### 📐 Example 5: Spatial Relative Locating (Auto-Wait + Layout Alignment)
+Find elements relative to other visual elements on the screen without using complex XPaths:
+
+```go
+// Find a target input box that is located ABOVE a specific submit button
+submitButton := session.Locator("RESOURCE_ID", "com.example.login:id/btn_submit")
+emailInput := session.Locator("CLASS_NAME", "android.widget.EditText").Above(submitButton)
+
+// Interact with the spatially resolved locator
+_ = emailInput.Fill(ctx, "user@example.com")
+```
+
+### 🧠 Example 6: AI-Suggested Stable Locators
+Query the AI engine to get suggestions for alternative stable and robust locators for elements on the screen:
+
+```go
+// Fetch active UI tree source XML layout
+xmlSource, _ := session.GetSource(ctx, "xml")
+
+// Query AI recommendations for stable elements
+suggestions, err := device.SuggestLocators(ctx, xmlSource)
+if err == nil {
+	for _, s := range suggestions {
+		fmt.Printf("Suggested Selector: %s (Strategy: %s, Stability Score: %0.2f)\n",
+			s.Selector, s.Strategy, s.StabilityScore)
+	}
+}
+```
+
+---
+
+## 🤝 Contributing & Open Source Roadmap
+
+We welcome and appreciate all contributions! `morego` is built from first principles with a clean dependency-injection design, making it highly modular and easy for new developers to explore and extend.
+
+### 🗺️ Our Active Roadmap (Areas to Contribute)
+We have identified several high-impact areas where you can make a significant difference:
+1.  **🐍 Multi-Language Client SDKs:** Help write the Python, Java, or C# fluent reference client wrappers.
+2.  **🖱️ Custom Desktop Drivers:** Extend the driver registry to support macOS / Windows desktop application automation.
+3.  **🤖 Advanced AI Healing Models:** Train and integrate semantic similarity heaters to match elements by natural language labels.
+4.  **📊 Custom Dashboard Exporters:** Add new reporting adapters (e.g. Slack/Teams notifications, PDF generation, or visual regression comparisons).
+
+### 🛠️ Setting Up for Contribution
+1. Fork and clone the repository.
+2. Verify all unit tests compile and run:
+   ```bash
+   go test ./...
+   ```
+3. Run code formatting and verification:
+   ```bash
+   make fmt
+   make lint
+   ```
+4. Read our comprehensive [Contributing Guidelines](docs/contributing.md) to learn about code styles, pull request templates, and testing rules.
+
 ---
 
 ### 🧪 3. Running Workspace Tests

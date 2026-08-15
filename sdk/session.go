@@ -54,3 +54,15 @@ func (s *Session) Locator(strategy string, selector string) *Locator {
 		index:    0,
 	}
 }
+
+// GetSource retrieves the current UI hierarchy tree layout.
+func (s *Session) GetSource(ctx context.Context, format string) (string, error) {
+	resp, err := s.device.driverClient.GetSource(ctx, &pb.GetSourceRequest{
+		DriverId: s.sessionID,
+		Format:   format,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch layout source: %w", err)
+	}
+	return resp.SourceData, nil
+}

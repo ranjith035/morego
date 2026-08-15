@@ -14,6 +14,7 @@ type Device struct {
 	conn          *grpc.ClientConn
 	sessionClient pb.SessionServiceClient
 	driverClient  pb.DriverServiceClient
+	aiClient      pb.AIServiceClient
 	deviceID      string
 }
 
@@ -28,6 +29,7 @@ func Connect(ctx context.Context, address string, deviceID string) (*Device, err
 		conn:          conn,
 		sessionClient: pb.NewSessionServiceClient(conn),
 		driverClient:  pb.NewDriverServiceClient(conn),
+		aiClient:      pb.NewAIServiceClient(conn),
 		deviceID:      deviceID,
 	}, nil
 }
@@ -56,4 +58,33 @@ func (d *Device) NewSession(ctx context.Context, appID string, capabilities map[
 		sessionID: resp.SessionId,
 		appID:     appID,
 	}, nil
+}
+
+// Suggestion models locator recommendations.
+type Suggestion struct {
+	Strategy       string
+	Selector       string
+	StabilityScore float32
+}
+
+// SuggestLocators queries the AI engine for recommended stable locators.
+func (d *Device) SuggestLocators(ctx context.Context, xmlHierarchy string) ([]Suggestion, error) {
+	resp, err := d.aiClient.SuggestLocators(ctx, &pb.SuggestLocatorsRequest{
+		SessionId:     d.deviceID,
+		ViewHierarchy: xmlHierarchy,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("ai suggest locators failed: %w", err)
+	}
+
+	var suggestions []Suggestion
+	for _, s := range resp.Suggestions {
+		suggestions = append(suggestions, Suggestion{
+			Strategy:       s.Locator.Strategy.String(),
+			Selector:       s.Locator.Selector,
+			StabilityScore: s.StabilityScore,
+		})
+	}
+
+	return suggestions, nil
 }
