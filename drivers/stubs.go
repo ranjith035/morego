@@ -70,7 +70,6 @@ func (b *BaseStub) ExecuteScript(ctx context.Context, script string, arguments [
 
 type UiAutomator2Driver struct{ BaseStub }
 type EspressoDriver struct{ BaseStub }
-type SeeTestDriver struct{ BaseStub }
 
 type CloudGridDriver struct {
 	BaseStub
@@ -91,7 +90,7 @@ func init() {
 		return NewXCUITestDriver()
 	})
 	DefaultRegistry.Register("seetest", func() Driver {
-		return &SeeTestDriver{BaseStub{Name: "SeeTest Driver"}}
+		return NewSeeTestDriver()
 	})
 	DefaultRegistry.Register("browserstack", func() Driver {
 		return &CloudGridDriver{BaseStub: BaseStub{Name: "BrowserStack Driver"}, Provider: "browserstack"}
