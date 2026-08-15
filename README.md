@@ -1,9 +1,9 @@
-# Mobile Automation Platform
+# morego
 
 An open-source, Playwright-inspired mobile automation framework built from first principles.
 
 > [!NOTE]
-> This framework is **NOT** another Appium wrapper. It is a modern, high-performance platform designed from the ground up to bring Playwright's legendary developer experience to native iOS and Android applications.
+> This framework is **NOT** another Appium wrapper. It is a modern, high-performance platform designed from the ground up to bring Playwright's developer experience to native iOS and Android applications.
 
 ---
 
@@ -51,7 +51,7 @@ sequenceDiagram
 ## Directory Layout
 
 ```
-mobile-framework/
+morego/
 ├── docs/               # System documentation & guidelines
 │   ├── architecture/   # Structural diagrams and components
 │   ├── vision/         # Mission and roadmap
@@ -85,7 +85,7 @@ Compile the CLI binary:
 ```bash
 make build
 ```
-The compiled binary will be generated under `bin/mobile`.
+The compiled binary will be generated under `bin/morego`.
 
 ### Formatting and Code Quality
 Ensure your contributions follow our coding style guidelines:

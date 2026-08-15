@@ -6,7 +6,7 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOFMT=$(GOCMD) fmt
 GOVET=$(GOCMD) vet
-BINARY_NAME=mobile
+BINARY_NAME=morego
 BINARY_DIR=bin
 
 .PHONY: all build test lint fmt clean proto init
