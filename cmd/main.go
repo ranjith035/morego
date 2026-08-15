@@ -57,10 +57,22 @@ func (s *server) CreateSession(ctx context.Context, req *pb.CreateSessionRequest
 		caps = make(map[string]string)
 	}
 	caps["device_id"] = req.DeviceId
+	if req.AppId != "" {
+		caps["app_id"] = req.AppId
+		caps["bundle_id"] = req.AppId
+	}
 
 	err = driver.Connect(ctx, caps)
 	if err != nil {
 		return nil, status.Errorf(codes.Unavailable, "failed to connect driver: %v", err)
+	}
+
+	if req.AppId != "" {
+		err = driver.LaunchApp(ctx, req.AppId, nil, nil)
+		if err != nil {
+			_ = driver.Disconnect(ctx)
+			return nil, status.Errorf(codes.FailedPrecondition, "failed to launch app %q: %v", req.AppId, err)
+		}
 	}
 
 	s.idGen++
