@@ -296,6 +296,41 @@ if err == nil {
 }
 ```
 
+### ☕ Example 7: Java (Maven) Automation
+This example launches the Settings app on an Android device using the compiled Java client bindings:
+
+```java
+package com.morego.sdk.sample;
+
+import com.morego.sdk.Device;
+import com.morego.sdk.Session;
+import com.morego.sdk.Locator;
+
+public class Sample {
+    public static void main(String[] args) {
+        System.out.println("Connecting to morego Core Server...");
+        try (Device device = Device.connect("localhost:50051", "pixel_6_pro")) {
+            Session session = device.newSession("com.android.settings");
+            
+            // Execute swipe
+            session.swipe(500, 1500, 500, 500, 400);
+
+            // Locate and Click search bar
+            Locator searchBar = session.locator("RESOURCE_ID", "com.android.settings:id/search_action_bar");
+            searchBar.click();
+            
+            // Fill input text
+            Locator searchInput = session.locator("CLASS_NAME", "android.widget.EditText");
+            searchInput.fill("Wi-Fi");
+            
+            System.out.println("Java Settings Search execution completed!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
 ---
 
 ## 🤝 Contributing & Open Source Roadmap
