@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Automation - Inspector & Trace Viewer</title>
+  <!-- Google Fonts Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-darker: #0b0d10;
+      --bg-dark: #12151c;
+      --bg-panel: #1b1e28;
+      --bg-input: #262a37;
+      --border-color: #2f3546;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #7c3aed;
+      --primary-hover: #6d28d9;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --font-main: 'Outfit', sans-serif;
+      --font-code: 'Fira Code', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-darker);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+    }
+
+    /* Header styling */
+    header {
+      background-color: var(--bg-dark);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .logo-title {
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, #d1d5db);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-tag {
+      font-size: 11px;
+      background-color: var(--primary);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .controls-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-toggle-platform {
+      display: flex;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 2px;
+    }
+
+    .platform-opt {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .platform-opt.active {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .device-address-bar {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 320px;
+    }
+
+    .indicator-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    .record-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-record {
+      background: linear-gradient(to right, var(--accent-red), #dc2626);
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-record:hover {
+      opacity: 0.9;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: white;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 0.5; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(0.8); opacity: 0.5; }
+    }
+
+    .sdk-select {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Core workspace layout */
+    .workspace {
+      display: grid;
+      grid-template-columns: 380px 1fr 400px;
+      flex: 1;
+      height: calc(100vh - 200px);
+      overflow: hidden;
+    }
+
+    .workspace-panel {
+      background-color: var(--bg-dark);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .workspace-panel.right {
+      border-right: none;
+      border-left: 1px solid var(--border-color);
+    }
+
+    .panel-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    /* Device Canvas Simulator */
+    .device-viewport {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--bg-darker);
+      height: 100%;
+      padding: 20px;
+    }
+
+    .phone-frame {
+      width: 320px;
+      height: 600px;
+      background-color: #111;
+      border: 8px solid #2d3039;
+      border-radius: 36px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phone-header-notch {
+      height: 24px;
+      background-color: #2d3039;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .notch-bar {
+      width: 110px;
+      height: 14px;
+      background-color: #111;
+      border-radius: 0 0 10px 10px;
+    }
+
+    .phone-screen {
+      flex: 1;
+      background-color: #0b0f19;
+      position: relative;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* Mobile App Mock UI */
+    .app-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      text-align: center;
+      background: linear-gradient(to right, #ffffff, var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .app-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .mock-input-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .mock-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .mock-input {
+      width: 100%;
+      background-color: #161a24;
+      border: 1px solid #3b4252;
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: var(--text-main);
+      font-size: 13px;
+    }
+
+    .mock-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      margin-top: 10px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    /* Highlights Overlays */
+    .element-highlight-box {
+      position: absolute;
+      border: 2px solid var(--accent-green);
+      background-color: rgba(16, 185, 129, 0.15);
+      cursor: pointer;
+      box-sizing: border-box;
+      pointer-events: auto;
+      transition: border-color 0.1s, background-color 0.1s;
+    }
+
+    .element-highlight-box:hover, .element-highlight-box.active {
+      border-color: var(--primary);
+      background-color: rgba(124, 58, 237, 0.25);
+    }
+
+    /* Hierarchy Tree View */
+    .tree-node {
+      font-family: var(--font-code);
+      font-size: 12px;
+      padding: 4px 0;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .tree-node-content {
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent-cyan);
+    }
+
+    .tree-node-content:hover, .tree-node-content.active {
+      background-color: var(--bg-input);
+      color: white;
+    }
+
+    .tree-tag {
+      color: #f43f5e;
+    }
+
+    .tree-attr {
+      color: #fb923c;
+    }
+
+    .tree-val {
+      color: #a7f3d0;
+    }
+
+    .tree-children {
+      margin-left: 18px;
+      border-left: 1px dotted var(--border-color);
+      padding-left: 6px;
+    }
+
+    /* Details Panel */
+    .locator-preview-box {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .locator-preview-input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text-main);
+      font-family: var(--font-code);
+      font-size: 13px;
+    }
+
+    .ai-card {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(6, 182, 212, 0.05));
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ai-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ai-card-locator {
+      font-family: var(--font-code);
+      font-size: 12px;
+      background-color: rgba(0,0,0,0.3);
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: var(--accent-green);
+      margin-bottom: 8px;
+      word-break: break-all;
+    }
+
+    .ai-card-reason {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .ai-confidence-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background-color: rgba(16, 185, 129, 0.2);
+      border: 1px solid var(--accent-green);
+      color: var(--accent-green);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+
+    .code-container {
+      background-color: var(--bg-darker);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .code-header {
+      background-color: var(--bg-dark);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .code-block {
+      flex: 1;
+      padding: 16px;
+      font-family: var(--font-code);
+      font-size: 12px;
+      color: #c9d1d9;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+
+    /* Bottom pane logs and timeline */
+    footer {
+      background-color: var(--bg-dark);
+      border-top: 1px solid var(--border-color);
+      height: 140px;
+      display: grid;
+      grid-template-columns: 60% 40%;
+      overflow: hidden;
+    }
+
+    .footer-panel {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      border-right: 1px solid var(--border-color);
+    }
+
+    .footer-panel.right {
+      border-right: none;
+    }
+
+    .footer-header {
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .footer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 16px;
+      font-family: var(--font-code);
+      font-size: 11px;
+    }
+
+    .log-line {
+      margin-bottom: 4px;
+      color: var(--text-muted);
+    }
+
+    .log-line.info { color: var(--accent-cyan); }
+    .log-line.success { color: var(--accent-green); }
+
+    .timeline-steps {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      height: 100%;
+      overflow-x: auto;
+      padding: 12px 0;
+    }
+
+    .timeline-node {
+      background-color: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      min-width: 140px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .timeline-node.active {
+      border-color: var(--primary);
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), transparent);
+    }
+
+    .timeline-node-time {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Bar -->
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">M</div>
+      <div class="logo-title">Mobile Framework</div>
+      <div class="logo-tag">Inspector</div>
+    </div>
+    
+    <div class="controls-container">
+      <div class="btn-toggle-platform">
+        <div class="platform-opt active" id="opt-android">Android</div>
+        <div class="platform-opt" id="opt-ios">iOS</div>
+      </div>
+      
+      <div class="device-address-bar">
+        <div class="indicator-dot"></div>
+        <span id="device-info-text">Pixel 6 Pro (ADB Connection: 127.0.0.1:5555)</span>
+      </div>
+
+      <div class="record-container">
+        <button class="btn-record" id="record-btn">
+          <div class="pulse-dot"></div>
+          <span id="record-text">Recording</span>
+        </button>
+      </div>
+
+      <select class="sdk-select" id="language-select">
+        <option value="typescript">TypeScript</option>
+        <option value="python">Python</option>
+        <option value="go">Go</option>
+        <option value="java">Java</option>
+        <option value="csharp">C#</option>
+        <option value="kotlin">Kotlin</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Workspace columns -->
+  <div class="workspace">
+    <!-- UI Hierarchy Explorer -->
+    <div class="workspace-panel">
+      <div class="panel-header">UI Hierarchy Tree</div>
+      <div class="panel-content" id="hierarchy-tree-content">
+        <!-- Root node -->
+        <div class="tree-node" data-target="root">
+          <div class="tree-node-content">
+            <span>&lt;</span><span class="tree-tag">hierarchy</span><span class="tree-attr"> rotation</span>=<span>"0"</span><span>&gt;</span>
+          </div>
+          <div class="tree-children">
+            <div class="tree-node" data-target="container">
+              <div class="tree-node-content">
+                <span>&lt;</span><span class="tree-tag">node</span><span class="tree-attr"> class</span>=<span>"FrameLayout"</span><span class="tree-attr"> bounds</span>=<span>"[0,0][1080,1920]"</span><span>&gt;</span>
+              </div>
+              <div class="tree-children">
+                <div class="tree-node" data-target="title">
+                  <div class="tree-node-content" id="tree-title">
+                    <span>&lt;</span><span class="tree-tag">node</span><span class="tree-attr"> class</span>=<span>"TextView"</span><span class="tree-attr"> text</span>=<span>"Welcome Back"</span><span>/&gt;</span>
+                  </div>
+                </div>
+                <div class="tree-node" data-target="username">
+                  <div class="tree-node-content" id="tree-username">
+                    <span>&lt;</span><span class="tree-tag">node</span><span class="tree-attr"> class</span>=<span>"EditText"</span><span class="tree-attr"> resource-id</span>=<span>"username_field"</span><span class="tree-attr"> placeholder</span>=<span>"Username"</span><span>/&gt;</span>
+                  </div>
+                </div>
+                <div class="tree-node" data-target="password">
+                  <div class="tree-node-content" id="tree-password">
+                    <span>&lt;</span><span class="tree-tag">node</span><span class="tree-attr"> class</span>=<span>"EditText"</span><span class="tree-attr"> resource-id</span>=<span>"password_field"</span><span class="tree-attr"> placeholder</span>=<span>"Password"</span><span>/&gt;</span>
+                  </div>
+                </div>
+                <div class="tree-node" data-target="submit">
+                  <div class="tree-node-content" id="tree-submit">
+                    <span>&lt;</span><span class="tree-tag">node</span><span class="tree-attr"> class</span>=<span>"Button"</span><span class="tree-attr"> text</span>=<span>"Login"</span><span class="tree-attr"> content-desc</span>=<span>"Login button"</span><span>/&gt;</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Element Canvas -->
+    <div class="device-viewport">
+      <div class="phone-frame">
+        <div class="phone-header-notch">
+          <div class="notch-bar"></div>
+        </div>
+        <div class="phone-screen" id="device-screen">
+          <div class="app-title">Welcome Back</div>
+          <div class="app-subtitle">Log in to your account</div>
+          
+          <div class="mock-input-group">
+            <span class="mock-label">USERNAME</span>
+            <input type="text" class="mock-input" placeholder="Enter username" disabled value="admin">
+            <!-- Overlay Highlight -->
+            <div class="element-highlight-box" style="top: 154px; left: 24px; width: 256px; height: 42px;" data-node="username" id="box-username"></div>
+          </div>
+
+          <div class="mock-input-group">
+            <span class="mock-label">PASSWORD</span>
+            <input type="password" class="mock-input" placeholder="••••••••" disabled value="password">
+            <!-- Overlay Highlight -->
+            <div class="element-highlight-box" style="top: 236px; left: 24px; width: 256px; height: 42px;" data-node="password" id="box-password"></div>
+          </div>
+
+          <button class="mock-btn" disabled>Login</button>
+          <!-- Overlay Highlight -->
+          <div class="element-highlight-box" style="top: 308px; left: 24px; width: 256px; height: 40px;" data-node="submit" id="box-submit"></div>
+          
+          <!-- Mock title Highlight -->
+          <div class="element-highlight-box" style="top: 60px; left: 24px; width: 256px; height: 32px;" data-node="title" id="box-title"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Properties & Codegen -->
+    <div class="workspace-panel right">
+      <div class="panel-header">Details & Generated Code</div>
+      <div class="panel-content" style="display: flex; flex-direction: column; gap: 20px;">
+        
+        <div>
+          <div class="mock-label">Locator Search</div>
+          <div class="locator-preview-box">
+            <span>🔎</span>
+            <input type="text" class="locator-preview-input" id="locator-input" placeholder="Enter selector (e.g. GetByText('Login'))">
+          </div>
+        </div>
+
+        <!-- AI healing suggestions card -->
+        <div class="ai-card" id="ai-suggestion-box">
+          <div class="ai-confidence-badge">98% Confidence</div>
+          <div class="ai-card-title">✨ AI Locator Suggestion</div>
+          <div class="ai-card-locator" id="ai-locator-text">GetByAccessibilityId("Login button")</div>
+          <div class="ai-card-reason">Matched Content Description 'Login button'. This tag is highly stable and conforms to accessibility-first standards.</div>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>GENERATED SDK SCRIPT</span>
+            <span>READ ONLY</span>
+          </div>
+          <pre class="code-block" id="generated-code-box">Loading generated script...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Panel (Console & Trace Timeline) -->
+  <footer>
+    <div class="footer-panel">
+      <div class="footer-header">stdout debug console log</div>
+      <div class="footer-content" id="log-content">
+        <div class="log-line info">[15:42:01] Initializing connection to pixel_6_pro...</div>
+        <div class="log-line success">[15:42:02] Core Engine listening on gRPC port 50051</div>
+        <div class="log-line">[15:42:03] Session started: com.example.loginapp (SessionID: 98ea1)</div>
+        <div class="log-line info">[15:42:05] Auto-Wait resolved: element 'title' is stable and visible.</div>
+      </div>
+    </div>
+    
+    <div class="footer-panel right">
+      <div class="footer-header">Trace execution timeline</div>
+      <div class="footer-content">
+        <div class="timeline-steps" id="timeline-box">
+          <div class="timeline-node active">
+            <span style="font-weight: 600;">launch_app</span>
+            <span class="timeline-node-time">0 ms (Start)</span>
+          </div>
+          <div class="timeline-node">
+            <span style="font-weight: 600;">fill("username_field")</span>
+            <span class="timeline-node-time">+ 120 ms</span>
+          </div>
+          <div class="timeline-node">
+            <span style="font-weight: 600;">fill("password_field")</span>
+            <span class="timeline-node-time">+ 280 ms</span>
+          </div>
+          <div class="timeline-node">
+            <span style="font-weight: 600;">click("Login button")</span>
+            <span class="timeline-node-time">+ 420 ms</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Link interaction logic -->
+  <script src="index.js"></script>
+</body>
+</html>

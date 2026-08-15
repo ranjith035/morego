@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package automation.v1;
+
+option go_package = "github.com/ranjith035/morego/proto/v1;v1";
+
+service SessionService {
+  rpc CreateSession (CreateSessionRequest) returns (CreateSessionResponse);
+  rpc CloseSession (CloseSessionRequest) returns (CloseSessionResponse);
+  rpc GetSessionInfo (GetSessionInfoRequest) returns (GetSessionInfoResponse);
+  rpc KeepAlive (stream KeepAliveRequest) returns (stream KeepAliveResponse);
+}
+
+message CreateSessionRequest {
+  string device_id = 1;
+  string app_id = 2;
+  map<string, string> capabilities = 3;
+  int32 timeout_ms = 4;
+}
+
+message CreateSessionResponse {
+  string session_id = 1;
+  map<string, string> capabilities = 2;
+  string status = 3;
+}
+
+message CloseSessionRequest {
+  string session_id = 1;
+}
+
+message CloseSessionResponse {
+  string session_id = 1;
+  bool success = 2;
+}
+
+message GetSessionInfoRequest {
+  string session_id = 1;
+}
+
+message GetSessionInfoResponse {
+  string session_id = 1;
+  string device_id = 2;
+  string app_id = 3;
+  string status = 4;
+  int64 uptime_ms = 5;
+}
+
+message KeepAliveRequest {
+  string session_id = 1;
+  int64 timestamp = 2;
+}
+
+message KeepAliveResponse {
+  string session_id = 1;
+  int64 timestamp = 2;
+  bool active = 3;
+}

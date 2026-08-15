@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package automation.v1;
+
+import "proto/locator.proto";
+
+option go_package = "github.com/ranjith035/morego/proto/v1;v1";
+
+service AIService {
+  rpc SelfHealLocator (SelfHealRequest) returns (SelfHealResponse);
+  rpc SuggestLocators (SuggestLocatorsRequest) returns (SuggestLocatorsResponse);
+  rpc AnalyzeFailure (AnalyzeFailureRequest) returns (AnalyzeFailureResponse);
+}
+
+message SelfHealRequest {
+  string session_id = 1;
+  Locator original_locator = 2;
+  string error_message = 3;
+  string view_hierarchy = 4; // Current page layout (XML/JSON representation)
+}
+
+message SelfHealResponse {
+  Locator healed_locator = 1;
+  float confidence = 2; // Value between 0.0 and 1.0
+  string reasoning = 3;
+}
+
+message SuggestLocatorsRequest {
+  string session_id = 1;
+  string view_hierarchy = 2;
+}
+
+message SuggestLocatorsResponse {
+  message Suggestion {
+    Locator locator = 1;
+    string reason = 2;
+    float stability_score = 3;
+  }
+  repeated Suggestion suggestions = 1;
+}
+
+message AnalyzeFailureRequest {
+  string error_message = 1;
+  string stack_trace = 2;
+  bytes screenshot_data = 3; // optional visual context
+  string logs = 4;
+}
+
+message AnalyzeFailureResponse {
+  string analysis = 1; // Human readable description of failure causes
+  string recommended_fix = 2;
+}

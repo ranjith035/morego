@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package automation.v1;
+
+import "proto/locator.proto";
+
+option go_package = "github.com/ranjith035/morego/proto/v1;v1";
+
+service DriverService {
+  rpc ConnectDriver (ConnectDriverRequest) returns (ConnectDriverResponse);
+  rpc DisconnectDriver (DisconnectDriverRequest) returns (DisconnectDriverResponse);
+  rpc FindElement (FindElementRequest) returns (FindElementResponse);
+  rpc FindElements (FindElementsRequest) returns (FindElementsResponse);
+  
+  rpc Click (ClickRequest) returns (ClickResponse);
+  rpc Fill (FillRequest) returns (FillResponse);
+  rpc Swipe (SwipeRequest) returns (SwipeResponse);
+  rpc Screenshot (ScreenshotRequest) returns (ScreenshotResponse);
+  rpc GetSource (GetSourceRequest) returns (GetSourceResponse);
+  rpc ExecuteScript (ExecuteScriptRequest) returns (ExecuteScriptResponse);
+}
+
+message ConnectDriverRequest {
+  string driver_id = 1;
+  string driver_type = 2; // e.g. "uiautomator2", "xcuitest"
+  string device_id = 3;
+  map<string, string> capabilities = 4;
+}
+
+message ConnectDriverResponse {
+  string driver_id = 1;
+  bool connected = 2;
+  string error_message = 3;
+}
+
+message DisconnectDriverRequest {
+  string driver_id = 1;
+}
+
+message DisconnectDriverResponse {
+  bool success = 1;
+}
+
+message ClickRequest {
+  string driver_id = 1;
+  oneof target {
+    string element_id = 2;
+    Point coordinates = 3;
+  }
+}
+
+message Point {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message ClickResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message FillRequest {
+  string driver_id = 1;
+  string element_id = 2;
+  string value = 3;
+}
+
+message FillResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message SwipeRequest {
+  string driver_id = 1;
+  Point start = 2;
+  Point end = 3;
+  int32 duration_ms = 4;
+}
+
+message SwipeResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message ScreenshotRequest {
+  string driver_id = 1;
+  string element_id = 2; // optional, to capture specific element bounds
+}
+
+message ScreenshotResponse {
+  bytes image_data = 1; // PNG format bytes
+  bool success = 2;
+  string error_message = 3;
+}
+
+message GetSourceRequest {
+  string driver_id = 1;
+  string format = 2; // e.g. "xml", "json"
+}
+
+message GetSourceResponse {
+  string source_data = 1; // UI tree dump content
+  bool success = 2;
+  string error_message = 3;
+}
+
+message ExecuteScriptRequest {
+  string driver_id = 1;
+  string script = 2;
+  repeated string arguments = 3;
+}
+
+message ExecuteScriptResponse {
+  string result = 1;
+  bool success = 2;
+  string error_message = 3;
+}

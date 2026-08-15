@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package automation.v1;
+
+option go_package = "github.com/ranjith035/morego/proto/v1;v1";
+
+service DeviceService {
+  rpc ListDevices (ListDevicesRequest) returns (ListDevicesResponse);
+  rpc GetDeviceCapabilities (GetDeviceCapabilitiesRequest) returns (GetDeviceCapabilitiesResponse);
+  rpc InstallApp (InstallAppRequest) returns (InstallAppResponse);
+  rpc UninstallApp (UninstallAppRequest) returns (UninstallAppResponse);
+  rpc LaunchApp (LaunchAppRequest) returns (LaunchAppResponse);
+  rpc TerminateApp (TerminateAppRequest) returns (TerminateAppResponse);
+}
+
+enum Platform {
+  PLATFORM_UNSPECIFIED = 0;
+  PLATFORM_ANDROID = 1;
+  PLATFORM_IOS = 2;
+}
+
+message DeviceInfo {
+  string device_id = 1;
+  string name = 2;
+  Platform platform = 3;
+  string os_version = 4;
+  string status = 5;
+  bool is_emulator = 6;
+}
+
+message ListDevicesRequest {
+  Platform platform_filter = 1;
+}
+
+message ListDevicesResponse {
+  repeated DeviceInfo devices = 1;
+}
+
+message GetDeviceCapabilitiesRequest {
+  string device_id = 1;
+}
+
+message GetDeviceCapabilitiesResponse {
+  string device_id = 1;
+  map<string, string> capabilities = 2;
+  int32 screen_width = 3;
+  int32 screen_height = 4;
+  float density = 5;
+}
+
+message InstallAppRequest {
+  string device_id = 1;
+  string app_path = 2;
+}
+
+message InstallAppResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message UninstallAppRequest {
+  string device_id = 1;
+  string app_id = 2;
+}
+
+message UninstallAppResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message LaunchAppRequest {
+  string device_id = 1;
+  string app_id = 2;
+  repeated string arguments = 3;
+  map<string, string> environment = 4;
+}
+
+message LaunchAppResponse {
+  bool success = 1;
+  int32 pid = 2;
+  string error_message = 3;
+}
+
+message TerminateAppRequest {
+  string device_id = 1;
+  string app_id = 2;
+}
+
+message TerminateAppResponse {
+  bool success = 1;
+  string error_message = 2;
+}

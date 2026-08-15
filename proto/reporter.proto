@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package automation.v1;
+
+option go_package = "github.com/ranjith035/morego/proto/v1;v1";
+
+service ReporterService {
+  rpc ReportSuiteStart (ReportSuiteStartRequest) returns (ReportSuiteStartResponse);
+  rpc ReportTestStart (ReportTestStartRequest) returns (ReportTestStartResponse);
+  rpc ReportTestEnd (ReportTestEndRequest) returns (ReportTestEndResponse);
+  rpc ReportSuiteEnd (ReportSuiteEndRequest) returns (ReportSuiteEndResponse);
+  rpc UploadTestArtifact (stream UploadArtifactRequest) returns (UploadArtifactResponse);
+}
+
+message ReportSuiteStartRequest {
+  string suite_name = 1;
+  int64 timestamp_ms = 2;
+}
+
+message ReportSuiteStartResponse {
+  string suite_run_id = 1;
+}
+
+message ReportTestStartRequest {
+  string suite_run_id = 1;
+  string test_name = 2;
+  int64 timestamp_ms = 3;
+}
+
+message ReportTestStartResponse {
+  string test_run_id = 1;
+}
+
+enum TestStatus {
+  TEST_STATUS_UNSPECIFIED = 0;
+  TEST_STATUS_PASSED = 1;
+  TEST_STATUS_FAILED = 2;
+  TEST_STATUS_SKIPPED = 3;
+}
+
+message ReportTestEndRequest {
+  string test_run_id = 1;
+  TestStatus status = 2;
+  string error_message = 3;
+  string stack_trace = 4;
+  int64 timestamp_ms = 5;
+}
+
+message ReportTestEndResponse {
+  bool success = 1;
+}
+
+message ReportSuiteEndRequest {
+  string suite_run_id = 1;
+  int64 timestamp_ms = 2;
+}
+
+message ReportSuiteEndResponse {
+  bool success = 1;
+}
+
+enum ArtifactType {
+  ARTIFACT_TYPE_UNSPECIFIED = 0;
+  ARTIFACT_TYPE_SCREENSHOT = 1;
+  ARTIFACT_TYPE_VIDEO = 2;
+  ARTIFACT_TYPE_LOG = 3;
+  ARTIFACT_TYPE_TRACE = 4;
+}
+
+message UploadArtifactRequest {
+  oneof payload {
+    ArtifactMetadata metadata = 1;
+    bytes chunk_data = 2;
+  }
+}
+
+message ArtifactMetadata {
+  string test_run_id = 1;
+  string filename = 2;
+  ArtifactType type = 3;
+}
+
+message UploadArtifactResponse {
+  string artifact_id = 1;
+  bool success = 2;
+  string error_message = 3;
+}

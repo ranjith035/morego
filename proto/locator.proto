@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package automation.v1;
+
+option go_package = "github.com/ranjith035/morego/proto/v1;v1";
+
+enum LocatorStrategy {
+  LOCATOR_STRATEGY_UNSPECIFIED = 0;
+  LOCATOR_STRATEGY_ACCESSIBILITY_ID = 1;
+  LOCATOR_STRATEGY_TEST_ID = 2;
+  LOCATOR_STRATEGY_ROLE = 3;
+  LOCATOR_STRATEGY_TEXT = 4;
+  LOCATOR_STRATEGY_PLACEHOLDER = 5;
+  LOCATOR_STRATEGY_LABEL = 6;
+  LOCATOR_STRATEGY_RESOURCE_ID = 7;
+  LOCATOR_STRATEGY_XPATH = 8;
+}
+
+message Locator {
+  LocatorStrategy strategy = 1;
+  string selector = 2;
+  Locator parent = 3;
+  int32 index = 4;
+  repeated RelativeConstraint constraints = 5;
+}
+
+enum RelativeDirection {
+  RELATIVE_DIRECTION_UNSPECIFIED = 0;
+  RELATIVE_DIRECTION_ABOVE = 1;
+  RELATIVE_DIRECTION_BELOW = 2;
+  RELATIVE_DIRECTION_LEFT_OF = 3;
+  RELATIVE_DIRECTION_RIGHT_OF = 4;
+}
+
+message RelativeConstraint {
+  RelativeDirection direction = 1;
+  Locator target = 2;
+  int32 distance_px = 3;
+}
+
+message ElementDescriptor {
+  string element_id = 1;
+  string tag_name = 2;
+  string text = 3;
+  BoundingBox bounds = 4;
+  map<string, string> attributes = 5;
+}
+
+message BoundingBox {
+  int32 x = 1;
+  int32 y = 2;
+  int32 width = 3;
+  int32 height = 4;
+}
+
+message FindElementRequest {
+  string session_id = 1;
+  Locator locator = 2;
+  int32 timeout_ms = 3;
+}
+
+message FindElementResponse {
+  ElementDescriptor element = 1;
+  bool found = 2;
+}
+
+message FindElementsRequest {
+  string session_id = 1;
+  Locator locator = 2;
+  int32 timeout_ms = 3;
+}
+
+message FindElementsResponse {
+  repeated ElementDescriptor elements = 1;
+}
