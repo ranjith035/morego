@@ -16,3 +16,6 @@ test_out.log
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Vision Roadmap
+Vision.md
