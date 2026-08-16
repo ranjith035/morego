@@ -490,9 +490,14 @@ func mapAIStrategy(strategy string) pb.LocatorStrategy {
 func startHTTPServer(srv *server) {
 	mux := http.NewServeMux()
 
-	// Serve the static files from the ./inspector directory
+	// Serve the static files from the ./inspector directory with cache disabling headers
 	fs := http.FileServer(http.Dir("./inspector"))
-	mux.Handle("/", fs)
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		fs.ServeHTTP(w, r)
+	})
 
 	// API Endpoint to get the live XML source and Base64 screenshot
 	mux.HandleFunc("/api/session/state", func(w http.ResponseWriter, r *http.Request) {
