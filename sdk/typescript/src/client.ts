@@ -22,7 +22,8 @@ export class Device {
         longs: String,
         enums: String,
         defaults: true,
-        oneofs: true
+        oneofs: true,
+        includeDirs: [path.resolve(protoPath, '..'), protoPath]
       }
     );
     const protoDescriptor = grpc.loadPackageDefinition(packageDefinition) as any;

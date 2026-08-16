@@ -48,4 +48,28 @@ export class Session {
   locator(strategy: string, selector: string): Locator {
     return new Locator(this, strategy, selector);
   }
+
+  getByText(text: string): Locator {
+    return this.locator('TEXT', text);
+  }
+
+  getByRole(role: string): Locator {
+    return this.locator('ROLE', role);
+  }
+
+  getByLabel(label: string): Locator {
+    return this.locator('LABEL', label);
+  }
+
+  getByPlaceholder(placeholder: string): Locator {
+    return this.locator('PLACEHOLDER', placeholder);
+  }
+
+  getByAccessibilityID(id: string): Locator {
+    return this.locator('ACCESSIBILITY_ID', id);
+  }
+
+  getByTestID(id: string): Locator {
+    return this.locator('TEST_ID', id);
+  }
 }
