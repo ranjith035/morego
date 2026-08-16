@@ -38,7 +38,16 @@ const domElements = {
   btnToggleRight: document.getElementById('btn-toggle-right'),
   btnToggleFooter: document.getElementById('btn-toggle-footer'),
   panelLeft: document.getElementById('panel-left'),
-  panelRight: document.getElementById('panel-right')
+  panelRight: document.getElementById('panel-right'),
+  contextSelect: document.getElementById('context-select'),
+  telemetryCpu: document.getElementById('telemetry-cpu'),
+  telemetryRam: document.getElementById('telemetry-ram'),
+  telemetryBattery: document.getElementById('telemetry-battery'),
+  mockLat: document.getElementById('mock-lat'),
+  mockLon: document.getElementById('mock-lon'),
+  btnMockLocation: document.getElementById('btn-mock-location'),
+  btnBiometricEnroll: document.getElementById('btn-biometric-enroll'),
+  btnBiometricVerify: document.getElementById('btn-biometric-verify')
 };
 
 // Initialize
@@ -76,6 +85,115 @@ domElements.btnToggleFooter.addEventListener('click', () => {
   domElements.btnToggleFooter.textContent = isCollapsed ? '▲ Expand Logs' : '▼ Collapse Logs';
   domElements.btnToggleFooter.title = isCollapsed ? 'Expand Console Logs' : 'Collapse Console Logs';
   addConsoleLog(`Console logs footer ${isCollapsed ? 'collapsed' : 'expanded'}.`, "info");
+});
+
+// Context switching listener
+domElements.contextSelect.addEventListener('change', async (e) => {
+  if (!sessionId) return;
+  const name = e.target.value;
+  addConsoleLog(`Switching execution context to ${name}...`, "info");
+  
+  try {
+    const resp = await fetch("/api/session/context/set", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, name })
+    });
+    if (resp.ok) {
+      addConsoleLog(`Context successfully switched to ${name}`, "success");
+      fetchLiveState(); // refresh bounds
+    } else {
+      const errData = await resp.json();
+      addConsoleLog(`Failed to switch context: ${errData.error}`, "warn");
+    }
+  } catch (err) {
+    addConsoleLog(`Error setting context: ${err.message}`, "warn");
+  }
+});
+
+// Mock GPS Location listener
+domElements.btnMockLocation.addEventListener('click', async () => {
+  if (!sessionId) return;
+  const lat = parseFloat(domElements.mockLat.value);
+  const lon = parseFloat(domElements.mockLon.value);
+  if (isNaN(lat) || isNaN(lon)) {
+    alert("Please enter valid decimal values for Latitude and Longitude.");
+    return;
+  }
+
+  addConsoleLog(`Injecting mock location: Latitude=${lat}, Longitude=${lon}...`, "info");
+  try {
+    const resp = await fetch("/api/session/action/device", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId,
+        action: "location",
+        latitude: lat,
+        longitude: lon
+      })
+    });
+    if (resp.ok) {
+      addConsoleLog(`GPS Location mock injection complete.`, "success");
+    } else {
+      const errData = await resp.json();
+      addConsoleLog(`Location mock failed: ${errData.error}`, "warn");
+    }
+  } catch (err) {
+    addConsoleLog(`Error injecting location: ${err.message}`, "warn");
+  }
+});
+
+// Mock Biometrics Enroll listener
+domElements.btnBiometricEnroll.addEventListener('click', async () => {
+  if (!sessionId) return;
+  addConsoleLog("Enrolling mock fingerprint with ID 1...", "info");
+  try {
+    const resp = await fetch("/api/session/action/device", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId,
+        action: "biometrics",
+        type: "enroll",
+        id: 1
+      })
+    });
+    if (resp.ok) {
+      addConsoleLog(`Mock fingerprint enrolled successfully. Ready to verify.`, "success");
+    } else {
+      const errData = await resp.json();
+      addConsoleLog(`Biometric enroll failed: ${errData.error}`, "warn");
+    }
+  } catch (err) {
+    addConsoleLog(`Error enrolling biometrics: ${err.message}`, "warn");
+  }
+});
+
+// Mock Biometrics Verify listener
+domElements.btnBiometricVerify.addEventListener('click', async () => {
+  if (!sessionId) return;
+  addConsoleLog("Injecting fingerprint biometric sensor verification event...", "info");
+  try {
+    const resp = await fetch("/api/session/action/device", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId,
+        action: "biometrics",
+        type: "verify",
+        id: 1
+      })
+    });
+    if (resp.ok) {
+      addConsoleLog(`Biometrics verification event triggered successfully on device.`, "success");
+    } else {
+      const errData = await resp.json();
+      addConsoleLog(`Biometric verification failed: ${errData.error}`, "warn");
+    }
+  } catch (err) {
+    addConsoleLog(`Error verifying biometrics: ${err.message}`, "warn");
+  }
 });
 
 // Copy script to clipboard
@@ -296,6 +414,10 @@ async function fetchLiveState() {
     // 5. Render layout tree and overlays recursively
     renderTree(xmlDoc.documentElement, domElements.treeContent);
     addConsoleLog("UI hierarchy mapped successfully. Interactive overlays ready.", "success");
+    
+    // Fetch active contexts and performance telemetry
+    fetchContexts();
+    fetchTelemetry();
 
   } catch (error) {
     addConsoleLog(`Sync error: ${error.message}`, "warn");
@@ -685,3 +807,46 @@ function escapeHTML(str) {
   if (!str) return "";
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+
+async function fetchContexts() {
+  if (!sessionId) return;
+  try {
+    const response = await fetch(`/api/session/contexts?sessionId=${sessionId}`);
+    if (response.ok) {
+      const data = await response.json();
+      const selectedValue = domElements.contextSelect.value;
+      domElements.contextSelect.innerHTML = "";
+      data.contexts.forEach(ctxName => {
+        const opt = document.createElement("option");
+        opt.value = ctxName;
+        opt.textContent = ctxName === "NATIVE_APP" ? "🌐 Native App" : `📱 WebView: ${ctxName}`;
+        domElements.contextSelect.appendChild(opt);
+      });
+      if (data.contexts.includes(selectedValue)) {
+        domElements.contextSelect.value = selectedValue;
+      } else {
+        domElements.contextSelect.value = "NATIVE_APP";
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to fetch contexts", err);
+  }
+}
+
+async function fetchTelemetry() {
+  if (!sessionId) return;
+  try {
+    const response = await fetch(`/api/session/telemetry?sessionId=${sessionId}`);
+    if (response.ok) {
+      const data = await response.json();
+      domElements.telemetryCpu.textContent = `${data.cpu_usage.toFixed(1)} %`;
+      domElements.telemetryRam.textContent = `${data.ram_usage_mb.toFixed(1)} MB`;
+      domElements.telemetryBattery.textContent = `${data.battery_level} %`;
+    }
+  } catch (err) {
+    console.warn("Failed to fetch telemetry", err);
+  }
+}
+
+// Start periodic telemetry loop
+setInterval(fetchTelemetry, 4500);

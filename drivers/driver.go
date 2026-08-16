@@ -51,4 +51,19 @@ type Driver interface {
 
 	// InjectKeyevent sends key event triggers.
 	InjectKeyevent(ctx context.Context, keycode int) error
+
+	// GetContexts lists active context targets (e.g. WebView and Native).
+	GetContexts(ctx context.Context) ([]string, error)
+
+	// SetContext switches driver execution to target context by name.
+	SetContext(ctx context.Context, name string) error
+
+	// GetTelemetry extracts device CPU/RAM/Battery metrics.
+	GetTelemetry(ctx context.Context) (map[string]interface{}, error)
+
+	// SetMockLocation configures mock coordinates.
+	SetMockLocation(ctx context.Context, latitude, longitude float64) error
+
+	// MockBiometrics enrolls or triggers fingerprint mock operations.
+	MockBiometrics(ctx context.Context, action string, enrollID int) error
 }

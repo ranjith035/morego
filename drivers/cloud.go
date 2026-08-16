@@ -328,3 +328,27 @@ func (d *CloudGridDriver) ExecuteScript(ctx context.Context, script string, argu
 func (d *CloudGridDriver) InjectKeyevent(ctx context.Context, keycode int) error {
 	return nil
 }
+
+func (d *CloudGridDriver) GetContexts(ctx context.Context) ([]string, error) {
+	return []string{"NATIVE_APP"}, nil
+}
+
+func (d *CloudGridDriver) SetContext(ctx context.Context, name string) error {
+	return nil
+}
+
+func (d *CloudGridDriver) GetTelemetry(ctx context.Context) (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"cpu_usage":     0.0,
+		"ram_usage_mb":  0.0,
+		"battery_level": 100,
+	}, nil
+}
+
+func (d *CloudGridDriver) SetMockLocation(ctx context.Context, latitude, longitude float64) error {
+	return nil
+}
+
+func (d *CloudGridDriver) MockBiometrics(ctx context.Context, action string, enrollID int) error {
+	return nil
+}

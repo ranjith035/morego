@@ -389,6 +389,100 @@ func (s *server) GetSource(ctx context.Context, req *pb.GetSourceRequest) (*pb.G
 	}, nil
 }
 
+func (s *server) GetContexts(ctx context.Context, req *pb.GetContextsRequest) (*pb.GetContextsResponse, error) {
+	s.mu.Lock()
+	driver, exists := s.sessions[req.DriverId]
+	s.mu.Unlock()
+
+	if !exists {
+		return nil, status.Errorf(codes.NotFound, "driver session %s not found", req.DriverId)
+	}
+
+	ctxs, err := driver.GetContexts(ctx)
+	if err != nil {
+		return &pb.GetContextsResponse{Success: false, ErrorMessage: err.Error()}, nil
+	}
+
+	return &pb.GetContextsResponse{Contexts: ctxs, Success: true}, nil
+}
+
+func (s *server) SetContext(ctx context.Context, req *pb.SetContextRequest) (*pb.SetContextResponse, error) {
+	s.mu.Lock()
+	driver, exists := s.sessions[req.DriverId]
+	s.mu.Unlock()
+
+	if !exists {
+		return nil, status.Errorf(codes.NotFound, "driver session %s not found", req.DriverId)
+	}
+
+	err := driver.SetContext(ctx, req.Name)
+	if err != nil {
+		return &pb.SetContextResponse{Success: false, ErrorMessage: err.Error()}, nil
+	}
+
+	return &pb.SetContextResponse{Success: true}, nil
+}
+
+func (s *server) GetTelemetry(ctx context.Context, req *pb.GetTelemetryRequest) (*pb.GetTelemetryResponse, error) {
+	s.mu.Lock()
+	driver, exists := s.sessions[req.DriverId]
+	s.mu.Unlock()
+
+	if !exists {
+		return nil, status.Errorf(codes.NotFound, "driver session %s not found", req.DriverId)
+	}
+
+	metrics, err := driver.GetTelemetry(ctx)
+	if err != nil {
+		return &pb.GetTelemetryResponse{Success: false, ErrorMessage: err.Error()}, nil
+	}
+
+	cpuVal, _ := metrics["cpu_usage"].(float64)
+	ramVal, _ := metrics["ram_usage_mb"].(float64)
+	battVal, _ := metrics["battery_level"].(int)
+
+	return &pb.GetTelemetryResponse{
+		CpuUsage:     cpuVal,
+		RamUsageMb:  ramVal,
+		BatteryLevel: int32(battVal),
+		Success:      true,
+	}, nil
+}
+
+func (s *server) SetMockLocation(ctx context.Context, req *pb.SetMockLocationRequest) (*pb.SetMockLocationResponse, error) {
+	s.mu.Lock()
+	driver, exists := s.sessions[req.DriverId]
+	s.mu.Unlock()
+
+	if !exists {
+		return nil, status.Errorf(codes.NotFound, "driver session %s not found", req.DriverId)
+	}
+
+	err := driver.SetMockLocation(ctx, req.Latitude, req.Longitude)
+	if err != nil {
+		return &pb.SetMockLocationResponse{Success: false, ErrorMessage: err.Error()}, nil
+	}
+
+	return &pb.SetMockLocationResponse{Success: true}, nil
+}
+
+func (s *server) MockBiometrics(ctx context.Context, req *pb.MockBiometricsRequest) (*pb.MockBiometricsResponse, error) {
+	s.mu.Lock()
+	driver, exists := s.sessions[req.DriverId]
+	s.mu.Unlock()
+
+	if !exists {
+		return nil, status.Errorf(codes.NotFound, "driver session %s not found", req.DriverId)
+	}
+
+	err := driver.MockBiometrics(ctx, req.Action, int(req.EnrollId))
+	if err != nil {
+		return &pb.MockBiometricsResponse{Success: false, ErrorMessage: err.Error()}, nil
+	}
+
+	return &pb.MockBiometricsResponse{Success: true}, nil
+}
+
 // SelfHealLocator evaluates element trees to propose healed queries.
 func (s *server) SelfHealLocator(ctx context.Context, req *pb.SelfHealRequest) (*pb.SelfHealResponse, error) {
 	hist := ai.PastNodeHistory{
@@ -686,6 +780,204 @@ func startHTTPServer(srv *server) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": fmt.Sprintf("Failed to fill input: %v", err)})
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{"success": true})
+	})
+
+	// API Endpoint to get contexts (WebViews & Native App)
+	mux.HandleFunc("/api/session/contexts", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			return
+		}
+
+		sessionID := r.URL.Query().Get("sessionId")
+		if sessionID == "" {
+			srv.mu.Lock()
+			for id := range srv.sessions {
+				sessionID = id
+				break
+			}
+			srv.mu.Unlock()
+		}
+
+		if sessionID == "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"error": "No active session found"}`))
+			return
+		}
+
+		srv.mu.Lock()
+		driver, exists := srv.sessions[sessionID]
+		srv.mu.Unlock()
+		if !exists {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"error": "Session not found"}`))
+			return
+		}
+
+		ctxs, err := driver.GetContexts(r.Context())
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"sessionId": sessionID,
+			"contexts":  ctxs,
+		})
+	})
+
+	// API Endpoint to switch context
+	mux.HandleFunc("/api/session/context/set", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			return
+		}
+
+		var req struct {
+			SessionID string `json:"sessionId"`
+			Name      string `json:"name"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		srv.mu.Lock()
+		driver, exists := srv.sessions[req.SessionID]
+		srv.mu.Unlock()
+		if !exists {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"error": "Session not found"}`))
+			return
+		}
+
+		err := driver.SetContext(r.Context(), req.Name)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{"success": true})
+	})
+
+	// API Endpoint to get performance telemetry
+	mux.HandleFunc("/api/session/telemetry", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			return
+		}
+
+		sessionID := r.URL.Query().Get("sessionId")
+		if sessionID == "" {
+			srv.mu.Lock()
+			for id := range srv.sessions {
+				sessionID = id
+				break
+			}
+			srv.mu.Unlock()
+		}
+
+		if sessionID == "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"error": "No active session found"}`))
+			return
+		}
+
+		srv.mu.Lock()
+		driver, exists := srv.sessions[sessionID]
+		srv.mu.Unlock()
+		if !exists {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"error": "Session not found"}`))
+			return
+		}
+
+		metrics, err := driver.GetTelemetry(r.Context())
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(metrics)
+	})
+
+	// API Endpoint to trigger mock biometrics or location settings
+	mux.HandleFunc("/api/session/action/device", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			return
+		}
+
+		var req struct {
+			SessionID string  `json:"sessionId"`
+			Action    string  `json:"action"` // "location" or "biometrics"
+			Type      string  `json:"type"`   // "enroll" or "verify" (for biometrics)
+			ID        int     `json:"id"`     // enrollId (for biometrics)
+			Latitude  float64 `json:"latitude"`
+			Longitude float64 `json:"longitude"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		srv.mu.Lock()
+		driver, exists := srv.sessions[req.SessionID]
+		srv.mu.Unlock()
+		if !exists {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"error": "Session not found"}`))
+			return
+		}
+
+		var err error
+		if req.Action == "location" {
+			err = driver.SetMockLocation(r.Context(), req.Latitude, req.Longitude)
+		} else if req.Action == "biometrics" {
+			err = driver.MockBiometrics(r.Context(), req.Type, req.ID)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"error": "Invalid action. Supported: location, biometrics"}`))
+			return
+		}
+
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 

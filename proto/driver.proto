@@ -18,6 +18,12 @@ service DriverService {
   rpc Screenshot (ScreenshotRequest) returns (ScreenshotResponse);
   rpc GetSource (GetSourceRequest) returns (GetSourceResponse);
   rpc ExecuteScript (ExecuteScriptRequest) returns (ExecuteScriptResponse);
+
+  rpc GetContexts (GetContextsRequest) returns (GetContextsResponse);
+  rpc SetContext (SetContextRequest) returns (SetContextResponse);
+  rpc GetTelemetry (GetTelemetryRequest) returns (GetTelemetryResponse);
+  rpc SetMockLocation (SetMockLocationRequest) returns (SetMockLocationResponse);
+  rpc MockBiometrics (MockBiometricsRequest) returns (MockBiometricsResponse);
 }
 
 message ConnectDriverRequest {
@@ -114,4 +120,58 @@ message ExecuteScriptResponse {
   string result = 1;
   bool success = 2;
   string error_message = 3;
+}
+
+message GetContextsRequest {
+  string driver_id = 1;
+}
+
+message GetContextsResponse {
+  repeated string contexts = 1;
+  bool success = 2;
+  string error_message = 3;
+}
+
+message SetContextRequest {
+  string driver_id = 1;
+  string name = 2;
+}
+
+message SetContextResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message GetTelemetryRequest {
+  string driver_id = 1;
+}
+
+message GetTelemetryResponse {
+  double cpu_usage = 1;
+  double ram_usage_mb = 2;
+  int32 battery_level = 3;
+  bool success = 4;
+  string error_message = 5;
+}
+
+message SetMockLocationRequest {
+  string driver_id = 1;
+  double latitude = 2;
+  double longitude = 3;
+}
+
+message SetMockLocationResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message MockBiometricsRequest {
+  string driver_id = 1;
+  string action = 2;
+  int32 enroll_id = 3;
+}
+
+message MockBiometricsResponse {
+  bool success = 1;
+  string error_message = 2;
 }

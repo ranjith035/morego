@@ -29,6 +29,11 @@ const (
 	DriverService_Screenshot_FullMethodName       = "/automation.v1.DriverService/Screenshot"
 	DriverService_GetSource_FullMethodName        = "/automation.v1.DriverService/GetSource"
 	DriverService_ExecuteScript_FullMethodName    = "/automation.v1.DriverService/ExecuteScript"
+	DriverService_GetContexts_FullMethodName      = "/automation.v1.DriverService/GetContexts"
+	DriverService_SetContext_FullMethodName       = "/automation.v1.DriverService/SetContext"
+	DriverService_GetTelemetry_FullMethodName     = "/automation.v1.DriverService/GetTelemetry"
+	DriverService_SetMockLocation_FullMethodName  = "/automation.v1.DriverService/SetMockLocation"
+	DriverService_MockBiometrics_FullMethodName   = "/automation.v1.DriverService/MockBiometrics"
 )
 
 // DriverServiceClient is the client API for DriverService service.
@@ -45,6 +50,11 @@ type DriverServiceClient interface {
 	Screenshot(ctx context.Context, in *ScreenshotRequest, opts ...grpc.CallOption) (*ScreenshotResponse, error)
 	GetSource(ctx context.Context, in *GetSourceRequest, opts ...grpc.CallOption) (*GetSourceResponse, error)
 	ExecuteScript(ctx context.Context, in *ExecuteScriptRequest, opts ...grpc.CallOption) (*ExecuteScriptResponse, error)
+	GetContexts(ctx context.Context, in *GetContextsRequest, opts ...grpc.CallOption) (*GetContextsResponse, error)
+	SetContext(ctx context.Context, in *SetContextRequest, opts ...grpc.CallOption) (*SetContextResponse, error)
+	GetTelemetry(ctx context.Context, in *GetTelemetryRequest, opts ...grpc.CallOption) (*GetTelemetryResponse, error)
+	SetMockLocation(ctx context.Context, in *SetMockLocationRequest, opts ...grpc.CallOption) (*SetMockLocationResponse, error)
+	MockBiometrics(ctx context.Context, in *MockBiometricsRequest, opts ...grpc.CallOption) (*MockBiometricsResponse, error)
 }
 
 type driverServiceClient struct {
@@ -155,6 +165,56 @@ func (c *driverServiceClient) ExecuteScript(ctx context.Context, in *ExecuteScri
 	return out, nil
 }
 
+func (c *driverServiceClient) GetContexts(ctx context.Context, in *GetContextsRequest, opts ...grpc.CallOption) (*GetContextsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetContextsResponse)
+	err := c.cc.Invoke(ctx, DriverService_GetContexts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *driverServiceClient) SetContext(ctx context.Context, in *SetContextRequest, opts ...grpc.CallOption) (*SetContextResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetContextResponse)
+	err := c.cc.Invoke(ctx, DriverService_SetContext_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *driverServiceClient) GetTelemetry(ctx context.Context, in *GetTelemetryRequest, opts ...grpc.CallOption) (*GetTelemetryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetTelemetryResponse)
+	err := c.cc.Invoke(ctx, DriverService_GetTelemetry_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *driverServiceClient) SetMockLocation(ctx context.Context, in *SetMockLocationRequest, opts ...grpc.CallOption) (*SetMockLocationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetMockLocationResponse)
+	err := c.cc.Invoke(ctx, DriverService_SetMockLocation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *driverServiceClient) MockBiometrics(ctx context.Context, in *MockBiometricsRequest, opts ...grpc.CallOption) (*MockBiometricsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MockBiometricsResponse)
+	err := c.cc.Invoke(ctx, DriverService_MockBiometrics_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DriverServiceServer is the server API for DriverService service.
 // All implementations must embed UnimplementedDriverServiceServer
 // for forward compatibility.
@@ -169,6 +229,11 @@ type DriverServiceServer interface {
 	Screenshot(context.Context, *ScreenshotRequest) (*ScreenshotResponse, error)
 	GetSource(context.Context, *GetSourceRequest) (*GetSourceResponse, error)
 	ExecuteScript(context.Context, *ExecuteScriptRequest) (*ExecuteScriptResponse, error)
+	GetContexts(context.Context, *GetContextsRequest) (*GetContextsResponse, error)
+	SetContext(context.Context, *SetContextRequest) (*SetContextResponse, error)
+	GetTelemetry(context.Context, *GetTelemetryRequest) (*GetTelemetryResponse, error)
+	SetMockLocation(context.Context, *SetMockLocationRequest) (*SetMockLocationResponse, error)
+	MockBiometrics(context.Context, *MockBiometricsRequest) (*MockBiometricsResponse, error)
 	mustEmbedUnimplementedDriverServiceServer()
 }
 
@@ -208,6 +273,21 @@ func (UnimplementedDriverServiceServer) GetSource(context.Context, *GetSourceReq
 }
 func (UnimplementedDriverServiceServer) ExecuteScript(context.Context, *ExecuteScriptRequest) (*ExecuteScriptResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ExecuteScript not implemented")
+}
+func (UnimplementedDriverServiceServer) GetContexts(context.Context, *GetContextsRequest) (*GetContextsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetContexts not implemented")
+}
+func (UnimplementedDriverServiceServer) SetContext(context.Context, *SetContextRequest) (*SetContextResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetContext not implemented")
+}
+func (UnimplementedDriverServiceServer) GetTelemetry(context.Context, *GetTelemetryRequest) (*GetTelemetryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetTelemetry not implemented")
+}
+func (UnimplementedDriverServiceServer) SetMockLocation(context.Context, *SetMockLocationRequest) (*SetMockLocationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetMockLocation not implemented")
+}
+func (UnimplementedDriverServiceServer) MockBiometrics(context.Context, *MockBiometricsRequest) (*MockBiometricsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method MockBiometrics not implemented")
 }
 func (UnimplementedDriverServiceServer) mustEmbedUnimplementedDriverServiceServer() {}
 func (UnimplementedDriverServiceServer) testEmbeddedByValue()                       {}
@@ -410,6 +490,96 @@ func _DriverService_ExecuteScript_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DriverService_GetContexts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetContextsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DriverServiceServer).GetContexts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DriverService_GetContexts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DriverServiceServer).GetContexts(ctx, req.(*GetContextsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DriverService_SetContext_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetContextRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DriverServiceServer).SetContext(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DriverService_SetContext_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DriverServiceServer).SetContext(ctx, req.(*SetContextRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DriverService_GetTelemetry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTelemetryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DriverServiceServer).GetTelemetry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DriverService_GetTelemetry_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DriverServiceServer).GetTelemetry(ctx, req.(*GetTelemetryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DriverService_SetMockLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetMockLocationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DriverServiceServer).SetMockLocation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DriverService_SetMockLocation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DriverServiceServer).SetMockLocation(ctx, req.(*SetMockLocationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DriverService_MockBiometrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MockBiometricsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DriverServiceServer).MockBiometrics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DriverService_MockBiometrics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DriverServiceServer).MockBiometrics(ctx, req.(*MockBiometricsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DriverService_ServiceDesc is the grpc.ServiceDesc for DriverService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -456,6 +626,26 @@ var DriverService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ExecuteScript",
 			Handler:    _DriverService_ExecuteScript_Handler,
+		},
+		{
+			MethodName: "GetContexts",
+			Handler:    _DriverService_GetContexts_Handler,
+		},
+		{
+			MethodName: "SetContext",
+			Handler:    _DriverService_SetContext_Handler,
+		},
+		{
+			MethodName: "GetTelemetry",
+			Handler:    _DriverService_GetTelemetry_Handler,
+		},
+		{
+			MethodName: "SetMockLocation",
+			Handler:    _DriverService_SetMockLocation_Handler,
+		},
+		{
+			MethodName: "MockBiometrics",
+			Handler:    _DriverService_MockBiometrics_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -1007,6 +1007,558 @@ func (x *ExecuteScriptResponse) GetErrorMessage() string {
 	return ""
 }
 
+type GetContextsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DriverId      string                 `protobuf:"bytes,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetContextsRequest) Reset() {
+	*x = GetContextsRequest{}
+	mi := &file_proto_driver_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetContextsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetContextsRequest) ProtoMessage() {}
+
+func (x *GetContextsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_driver_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetContextsRequest.ProtoReflect.Descriptor instead.
+func (*GetContextsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_driver_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *GetContextsRequest) GetDriverId() string {
+	if x != nil {
+		return x.DriverId
+	}
+	return ""
+}
+
+type GetContextsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Contexts      []string               `protobuf:"bytes,1,rep,name=contexts,proto3" json:"contexts,omitempty"`
+	Success       bool                   `protobuf:"varint,2,opt,name=success,proto3" json:"success,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,3,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetContextsResponse) Reset() {
+	*x = GetContextsResponse{}
+	mi := &file_proto_driver_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetContextsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetContextsResponse) ProtoMessage() {}
+
+func (x *GetContextsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_driver_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetContextsResponse.ProtoReflect.Descriptor instead.
+func (*GetContextsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_driver_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *GetContextsResponse) GetContexts() []string {
+	if x != nil {
+		return x.Contexts
+	}
+	return nil
+}
+
+func (x *GetContextsResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *GetContextsResponse) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
+type SetContextRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DriverId      string                 `protobuf:"bytes,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetContextRequest) Reset() {
+	*x = SetContextRequest{}
+	mi := &file_proto_driver_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetContextRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetContextRequest) ProtoMessage() {}
+
+func (x *SetContextRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_driver_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetContextRequest.ProtoReflect.Descriptor instead.
+func (*SetContextRequest) Descriptor() ([]byte, []int) {
+	return file_proto_driver_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *SetContextRequest) GetDriverId() string {
+	if x != nil {
+		return x.DriverId
+	}
+	return ""
+}
+
+func (x *SetContextRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type SetContextResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetContextResponse) Reset() {
+	*x = SetContextResponse{}
+	mi := &file_proto_driver_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetContextResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetContextResponse) ProtoMessage() {}
+
+func (x *SetContextResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_driver_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetContextResponse.ProtoReflect.Descriptor instead.
+func (*SetContextResponse) Descriptor() ([]byte, []int) {
+	return file_proto_driver_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *SetContextResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *SetContextResponse) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
+type GetTelemetryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DriverId      string                 `protobuf:"bytes,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTelemetryRequest) Reset() {
+	*x = GetTelemetryRequest{}
+	mi := &file_proto_driver_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTelemetryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTelemetryRequest) ProtoMessage() {}
+
+func (x *GetTelemetryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_driver_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTelemetryRequest.ProtoReflect.Descriptor instead.
+func (*GetTelemetryRequest) Descriptor() ([]byte, []int) {
+	return file_proto_driver_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *GetTelemetryRequest) GetDriverId() string {
+	if x != nil {
+		return x.DriverId
+	}
+	return ""
+}
+
+type GetTelemetryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CpuUsage      float64                `protobuf:"fixed64,1,opt,name=cpu_usage,json=cpuUsage,proto3" json:"cpu_usage,omitempty"`
+	RamUsageMb    float64                `protobuf:"fixed64,2,opt,name=ram_usage_mb,json=ramUsageMb,proto3" json:"ram_usage_mb,omitempty"`
+	BatteryLevel  int32                  `protobuf:"varint,3,opt,name=battery_level,json=batteryLevel,proto3" json:"battery_level,omitempty"`
+	Success       bool                   `protobuf:"varint,4,opt,name=success,proto3" json:"success,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,5,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTelemetryResponse) Reset() {
+	*x = GetTelemetryResponse{}
+	mi := &file_proto_driver_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTelemetryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTelemetryResponse) ProtoMessage() {}
+
+func (x *GetTelemetryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_driver_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTelemetryResponse.ProtoReflect.Descriptor instead.
+func (*GetTelemetryResponse) Descriptor() ([]byte, []int) {
+	return file_proto_driver_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *GetTelemetryResponse) GetCpuUsage() float64 {
+	if x != nil {
+		return x.CpuUsage
+	}
+	return 0
+}
+
+func (x *GetTelemetryResponse) GetRamUsageMb() float64 {
+	if x != nil {
+		return x.RamUsageMb
+	}
+	return 0
+}
+
+func (x *GetTelemetryResponse) GetBatteryLevel() int32 {
+	if x != nil {
+		return x.BatteryLevel
+	}
+	return 0
+}
+
+func (x *GetTelemetryResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *GetTelemetryResponse) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
+type SetMockLocationRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DriverId      string                 `protobuf:"bytes,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	Latitude      float64                `protobuf:"fixed64,2,opt,name=latitude,proto3" json:"latitude,omitempty"`
+	Longitude     float64                `protobuf:"fixed64,3,opt,name=longitude,proto3" json:"longitude,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetMockLocationRequest) Reset() {
+	*x = SetMockLocationRequest{}
+	mi := &file_proto_driver_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetMockLocationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetMockLocationRequest) ProtoMessage() {}
+
+func (x *SetMockLocationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_driver_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetMockLocationRequest.ProtoReflect.Descriptor instead.
+func (*SetMockLocationRequest) Descriptor() ([]byte, []int) {
+	return file_proto_driver_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *SetMockLocationRequest) GetDriverId() string {
+	if x != nil {
+		return x.DriverId
+	}
+	return ""
+}
+
+func (x *SetMockLocationRequest) GetLatitude() float64 {
+	if x != nil {
+		return x.Latitude
+	}
+	return 0
+}
+
+func (x *SetMockLocationRequest) GetLongitude() float64 {
+	if x != nil {
+		return x.Longitude
+	}
+	return 0
+}
+
+type SetMockLocationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetMockLocationResponse) Reset() {
+	*x = SetMockLocationResponse{}
+	mi := &file_proto_driver_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetMockLocationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetMockLocationResponse) ProtoMessage() {}
+
+func (x *SetMockLocationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_driver_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetMockLocationResponse.ProtoReflect.Descriptor instead.
+func (*SetMockLocationResponse) Descriptor() ([]byte, []int) {
+	return file_proto_driver_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *SetMockLocationResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *SetMockLocationResponse) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
+type MockBiometricsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DriverId      string                 `protobuf:"bytes,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	Action        string                 `protobuf:"bytes,2,opt,name=action,proto3" json:"action,omitempty"`
+	EnrollId      int32                  `protobuf:"varint,3,opt,name=enroll_id,json=enrollId,proto3" json:"enroll_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MockBiometricsRequest) Reset() {
+	*x = MockBiometricsRequest{}
+	mi := &file_proto_driver_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MockBiometricsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MockBiometricsRequest) ProtoMessage() {}
+
+func (x *MockBiometricsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_driver_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MockBiometricsRequest.ProtoReflect.Descriptor instead.
+func (*MockBiometricsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_driver_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *MockBiometricsRequest) GetDriverId() string {
+	if x != nil {
+		return x.DriverId
+	}
+	return ""
+}
+
+func (x *MockBiometricsRequest) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+func (x *MockBiometricsRequest) GetEnrollId() int32 {
+	if x != nil {
+		return x.EnrollId
+	}
+	return 0
+}
+
+type MockBiometricsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MockBiometricsResponse) Reset() {
+	*x = MockBiometricsResponse{}
+	mi := &file_proto_driver_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MockBiometricsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MockBiometricsResponse) ProtoMessage() {}
+
+func (x *MockBiometricsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_driver_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MockBiometricsResponse.ProtoReflect.Descriptor instead.
+func (*MockBiometricsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_driver_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *MockBiometricsResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *MockBiometricsResponse) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
 var File_proto_driver_proto protoreflect.FileDescriptor
 
 const file_proto_driver_proto_rawDesc = "" +
@@ -1082,7 +1634,43 @@ const file_proto_driver_proto_rawDesc = "" +
 	"\x15ExecuteScriptResponse\x12\x16\n" +
 	"\x06result\x18\x01 \x01(\tR\x06result\x12\x18\n" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\x12#\n" +
-	"\rerror_message\x18\x03 \x01(\tR\ferrorMessage2\xc7\x06\n" +
+	"\rerror_message\x18\x03 \x01(\tR\ferrorMessage\"1\n" +
+	"\x12GetContextsRequest\x12\x1b\n" +
+	"\tdriver_id\x18\x01 \x01(\tR\bdriverId\"p\n" +
+	"\x13GetContextsResponse\x12\x1a\n" +
+	"\bcontexts\x18\x01 \x03(\tR\bcontexts\x12\x18\n" +
+	"\asuccess\x18\x02 \x01(\bR\asuccess\x12#\n" +
+	"\rerror_message\x18\x03 \x01(\tR\ferrorMessage\"D\n" +
+	"\x11SetContextRequest\x12\x1b\n" +
+	"\tdriver_id\x18\x01 \x01(\tR\bdriverId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"S\n" +
+	"\x12SetContextResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\"2\n" +
+	"\x13GetTelemetryRequest\x12\x1b\n" +
+	"\tdriver_id\x18\x01 \x01(\tR\bdriverId\"\xb9\x01\n" +
+	"\x14GetTelemetryResponse\x12\x1b\n" +
+	"\tcpu_usage\x18\x01 \x01(\x01R\bcpuUsage\x12 \n" +
+	"\fram_usage_mb\x18\x02 \x01(\x01R\n" +
+	"ramUsageMb\x12#\n" +
+	"\rbattery_level\x18\x03 \x01(\x05R\fbatteryLevel\x12\x18\n" +
+	"\asuccess\x18\x04 \x01(\bR\asuccess\x12#\n" +
+	"\rerror_message\x18\x05 \x01(\tR\ferrorMessage\"o\n" +
+	"\x16SetMockLocationRequest\x12\x1b\n" +
+	"\tdriver_id\x18\x01 \x01(\tR\bdriverId\x12\x1a\n" +
+	"\blatitude\x18\x02 \x01(\x01R\blatitude\x12\x1c\n" +
+	"\tlongitude\x18\x03 \x01(\x01R\tlongitude\"X\n" +
+	"\x17SetMockLocationResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\"i\n" +
+	"\x15MockBiometricsRequest\x12\x1b\n" +
+	"\tdriver_id\x18\x01 \x01(\tR\bdriverId\x12\x16\n" +
+	"\x06action\x18\x02 \x01(\tR\x06action\x12\x1b\n" +
+	"\tenroll_id\x18\x03 \x01(\x05R\benrollId\"W\n" +
+	"\x16MockBiometricsResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage2\x8a\n" +
+	"\n" +
 	"\rDriverService\x12Z\n" +
 	"\rConnectDriver\x12#.automation.v1.ConnectDriverRequest\x1a$.automation.v1.ConnectDriverResponse\x12c\n" +
 	"\x10DisconnectDriver\x12&.automation.v1.DisconnectDriverRequest\x1a'.automation.v1.DisconnectDriverResponse\x12T\n" +
@@ -1094,7 +1682,13 @@ const file_proto_driver_proto_rawDesc = "" +
 	"\n" +
 	"Screenshot\x12 .automation.v1.ScreenshotRequest\x1a!.automation.v1.ScreenshotResponse\x12N\n" +
 	"\tGetSource\x12\x1f.automation.v1.GetSourceRequest\x1a .automation.v1.GetSourceResponse\x12Z\n" +
-	"\rExecuteScript\x12#.automation.v1.ExecuteScriptRequest\x1a$.automation.v1.ExecuteScriptResponseB*Z(github.com/ranjith035/morego/proto/v1;v1b\x06proto3"
+	"\rExecuteScript\x12#.automation.v1.ExecuteScriptRequest\x1a$.automation.v1.ExecuteScriptResponse\x12T\n" +
+	"\vGetContexts\x12!.automation.v1.GetContextsRequest\x1a\".automation.v1.GetContextsResponse\x12Q\n" +
+	"\n" +
+	"SetContext\x12 .automation.v1.SetContextRequest\x1a!.automation.v1.SetContextResponse\x12W\n" +
+	"\fGetTelemetry\x12\".automation.v1.GetTelemetryRequest\x1a#.automation.v1.GetTelemetryResponse\x12`\n" +
+	"\x0fSetMockLocation\x12%.automation.v1.SetMockLocationRequest\x1a&.automation.v1.SetMockLocationResponse\x12]\n" +
+	"\x0eMockBiometrics\x12$.automation.v1.MockBiometricsRequest\x1a%.automation.v1.MockBiometricsResponseB*Z(github.com/ranjith035/morego/proto/v1;v1b\x06proto3"
 
 var (
 	file_proto_driver_proto_rawDescOnce sync.Once
@@ -1108,7 +1702,7 @@ func file_proto_driver_proto_rawDescGZIP() []byte {
 	return file_proto_driver_proto_rawDescData
 }
 
-var file_proto_driver_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_proto_driver_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_proto_driver_proto_goTypes = []any{
 	(*ConnectDriverRequest)(nil),     // 0: automation.v1.ConnectDriverRequest
 	(*ConnectDriverResponse)(nil),    // 1: automation.v1.ConnectDriverResponse
@@ -1127,39 +1721,59 @@ var file_proto_driver_proto_goTypes = []any{
 	(*GetSourceResponse)(nil),        // 14: automation.v1.GetSourceResponse
 	(*ExecuteScriptRequest)(nil),     // 15: automation.v1.ExecuteScriptRequest
 	(*ExecuteScriptResponse)(nil),    // 16: automation.v1.ExecuteScriptResponse
-	nil,                              // 17: automation.v1.ConnectDriverRequest.CapabilitiesEntry
-	(*FindElementRequest)(nil),       // 18: automation.v1.FindElementRequest
-	(*FindElementsRequest)(nil),      // 19: automation.v1.FindElementsRequest
-	(*FindElementResponse)(nil),      // 20: automation.v1.FindElementResponse
-	(*FindElementsResponse)(nil),     // 21: automation.v1.FindElementsResponse
+	(*GetContextsRequest)(nil),       // 17: automation.v1.GetContextsRequest
+	(*GetContextsResponse)(nil),      // 18: automation.v1.GetContextsResponse
+	(*SetContextRequest)(nil),        // 19: automation.v1.SetContextRequest
+	(*SetContextResponse)(nil),       // 20: automation.v1.SetContextResponse
+	(*GetTelemetryRequest)(nil),      // 21: automation.v1.GetTelemetryRequest
+	(*GetTelemetryResponse)(nil),     // 22: automation.v1.GetTelemetryResponse
+	(*SetMockLocationRequest)(nil),   // 23: automation.v1.SetMockLocationRequest
+	(*SetMockLocationResponse)(nil),  // 24: automation.v1.SetMockLocationResponse
+	(*MockBiometricsRequest)(nil),    // 25: automation.v1.MockBiometricsRequest
+	(*MockBiometricsResponse)(nil),   // 26: automation.v1.MockBiometricsResponse
+	nil,                              // 27: automation.v1.ConnectDriverRequest.CapabilitiesEntry
+	(*FindElementRequest)(nil),       // 28: automation.v1.FindElementRequest
+	(*FindElementsRequest)(nil),      // 29: automation.v1.FindElementsRequest
+	(*FindElementResponse)(nil),      // 30: automation.v1.FindElementResponse
+	(*FindElementsResponse)(nil),     // 31: automation.v1.FindElementsResponse
 }
 var file_proto_driver_proto_depIdxs = []int32{
-	17, // 0: automation.v1.ConnectDriverRequest.capabilities:type_name -> automation.v1.ConnectDriverRequest.CapabilitiesEntry
+	27, // 0: automation.v1.ConnectDriverRequest.capabilities:type_name -> automation.v1.ConnectDriverRequest.CapabilitiesEntry
 	5,  // 1: automation.v1.ClickRequest.coordinates:type_name -> automation.v1.Point
 	5,  // 2: automation.v1.SwipeRequest.start:type_name -> automation.v1.Point
 	5,  // 3: automation.v1.SwipeRequest.end:type_name -> automation.v1.Point
 	0,  // 4: automation.v1.DriverService.ConnectDriver:input_type -> automation.v1.ConnectDriverRequest
 	2,  // 5: automation.v1.DriverService.DisconnectDriver:input_type -> automation.v1.DisconnectDriverRequest
-	18, // 6: automation.v1.DriverService.FindElement:input_type -> automation.v1.FindElementRequest
-	19, // 7: automation.v1.DriverService.FindElements:input_type -> automation.v1.FindElementsRequest
+	28, // 6: automation.v1.DriverService.FindElement:input_type -> automation.v1.FindElementRequest
+	29, // 7: automation.v1.DriverService.FindElements:input_type -> automation.v1.FindElementsRequest
 	4,  // 8: automation.v1.DriverService.Click:input_type -> automation.v1.ClickRequest
 	7,  // 9: automation.v1.DriverService.Fill:input_type -> automation.v1.FillRequest
 	9,  // 10: automation.v1.DriverService.Swipe:input_type -> automation.v1.SwipeRequest
 	11, // 11: automation.v1.DriverService.Screenshot:input_type -> automation.v1.ScreenshotRequest
 	13, // 12: automation.v1.DriverService.GetSource:input_type -> automation.v1.GetSourceRequest
 	15, // 13: automation.v1.DriverService.ExecuteScript:input_type -> automation.v1.ExecuteScriptRequest
-	1,  // 14: automation.v1.DriverService.ConnectDriver:output_type -> automation.v1.ConnectDriverResponse
-	3,  // 15: automation.v1.DriverService.DisconnectDriver:output_type -> automation.v1.DisconnectDriverResponse
-	20, // 16: automation.v1.DriverService.FindElement:output_type -> automation.v1.FindElementResponse
-	21, // 17: automation.v1.DriverService.FindElements:output_type -> automation.v1.FindElementsResponse
-	6,  // 18: automation.v1.DriverService.Click:output_type -> automation.v1.ClickResponse
-	8,  // 19: automation.v1.DriverService.Fill:output_type -> automation.v1.FillResponse
-	10, // 20: automation.v1.DriverService.Swipe:output_type -> automation.v1.SwipeResponse
-	12, // 21: automation.v1.DriverService.Screenshot:output_type -> automation.v1.ScreenshotResponse
-	14, // 22: automation.v1.DriverService.GetSource:output_type -> automation.v1.GetSourceResponse
-	16, // 23: automation.v1.DriverService.ExecuteScript:output_type -> automation.v1.ExecuteScriptResponse
-	14, // [14:24] is the sub-list for method output_type
-	4,  // [4:14] is the sub-list for method input_type
+	17, // 14: automation.v1.DriverService.GetContexts:input_type -> automation.v1.GetContextsRequest
+	19, // 15: automation.v1.DriverService.SetContext:input_type -> automation.v1.SetContextRequest
+	21, // 16: automation.v1.DriverService.GetTelemetry:input_type -> automation.v1.GetTelemetryRequest
+	23, // 17: automation.v1.DriverService.SetMockLocation:input_type -> automation.v1.SetMockLocationRequest
+	25, // 18: automation.v1.DriverService.MockBiometrics:input_type -> automation.v1.MockBiometricsRequest
+	1,  // 19: automation.v1.DriverService.ConnectDriver:output_type -> automation.v1.ConnectDriverResponse
+	3,  // 20: automation.v1.DriverService.DisconnectDriver:output_type -> automation.v1.DisconnectDriverResponse
+	30, // 21: automation.v1.DriverService.FindElement:output_type -> automation.v1.FindElementResponse
+	31, // 22: automation.v1.DriverService.FindElements:output_type -> automation.v1.FindElementsResponse
+	6,  // 23: automation.v1.DriverService.Click:output_type -> automation.v1.ClickResponse
+	8,  // 24: automation.v1.DriverService.Fill:output_type -> automation.v1.FillResponse
+	10, // 25: automation.v1.DriverService.Swipe:output_type -> automation.v1.SwipeResponse
+	12, // 26: automation.v1.DriverService.Screenshot:output_type -> automation.v1.ScreenshotResponse
+	14, // 27: automation.v1.DriverService.GetSource:output_type -> automation.v1.GetSourceResponse
+	16, // 28: automation.v1.DriverService.ExecuteScript:output_type -> automation.v1.ExecuteScriptResponse
+	18, // 29: automation.v1.DriverService.GetContexts:output_type -> automation.v1.GetContextsResponse
+	20, // 30: automation.v1.DriverService.SetContext:output_type -> automation.v1.SetContextResponse
+	22, // 31: automation.v1.DriverService.GetTelemetry:output_type -> automation.v1.GetTelemetryResponse
+	24, // 32: automation.v1.DriverService.SetMockLocation:output_type -> automation.v1.SetMockLocationResponse
+	26, // 33: automation.v1.DriverService.MockBiometrics:output_type -> automation.v1.MockBiometricsResponse
+	19, // [19:34] is the sub-list for method output_type
+	4,  // [4:19] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name
 	4,  // [4:4] is the sub-list for extension extendee
 	0,  // [0:4] is the sub-list for field type_name
@@ -1181,7 +1795,7 @@ func file_proto_driver_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_driver_proto_rawDesc), len(file_proto_driver_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

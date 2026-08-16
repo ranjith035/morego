@@ -294,3 +294,27 @@ func (d *SeeTestDriver) ExecuteScript(ctx context.Context, script string, argume
 func (d *SeeTestDriver) InjectKeyevent(ctx context.Context, keycode int) error {
 	return nil
 }
+
+func (d *SeeTestDriver) GetContexts(ctx context.Context) ([]string, error) {
+	return []string{"NATIVE_APP"}, nil
+}
+
+func (d *SeeTestDriver) SetContext(ctx context.Context, name string) error {
+	return nil
+}
+
+func (d *SeeTestDriver) GetTelemetry(ctx context.Context) (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"cpu_usage":     0.0,
+		"ram_usage_mb":  0.0,
+		"battery_level": 100,
+	}, nil
+}
+
+func (d *SeeTestDriver) SetMockLocation(ctx context.Context, latitude, longitude float64) error {
+	return nil
+}
+
+func (d *SeeTestDriver) MockBiometrics(ctx context.Context, action string, enrollID int) error {
+	return nil
+}

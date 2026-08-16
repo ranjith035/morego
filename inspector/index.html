@@ -685,6 +685,10 @@
         </button>
       </div>
 
+      <select class="sdk-select" id="context-select" style="margin-right: 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0 10px; border-radius: 6px; height: 36px; cursor: pointer;">
+        <option value="NATIVE_APP">🌐 Native App</option>
+      </select>
+
       <select class="sdk-select" id="language-select">
         <option value="typescript">TypeScript</option>
         <option value="python">Python</option>
@@ -756,6 +760,49 @@
             <button id="action-clear" style="flex: 1; padding: 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
               <span>🧹</span> <span>Clear</span>
             </button>
+          </div>
+        </div>
+
+        <!-- Telemetry Card -->
+        <div style="background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 8px;">
+          <div class="mock-label" style="margin-bottom: 5px; color: var(--accent-cyan); font-weight: 700; font-size: 11px;">DEVICE PERFORMANCE TELEMETRY</div>
+          <div style="display: flex; gap: 10px; justify-content: space-between;">
+            <div style="flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; text-align: center;">
+              <div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">CPU</div>
+              <div id="telemetry-cpu" style="font-size: 15px; font-weight: bold; color: var(--accent-cyan); font-family: var(--font-code); margin-top: 4px;">-- %</div>
+            </div>
+            <div style="flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; text-align: center;">
+              <div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">RAM</div>
+              <div id="telemetry-ram" style="font-size: 15px; font-weight: bold; color: var(--accent-cyan); font-family: var(--font-code); margin-top: 4px;">-- MB</div>
+            </div>
+            <div style="flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; text-align: center;">
+              <div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">BATTERY</div>
+              <div id="telemetry-battery" style="font-size: 15px; font-weight: bold; color: var(--accent-cyan); font-family: var(--font-code); margin-top: 4px;">-- %</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Device Mocking Controls -->
+        <div style="background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 8px;">
+          <div class="mock-label" style="margin-bottom: 5px; color: var(--accent-cyan); font-weight: 700; font-size: 11px;">MOCK DEVICE CAPABILITIES</div>
+          
+          <!-- GPS Location Mocking -->
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 5px;">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">GPS Location coordinates</span>
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="mock-lat" placeholder="Latitude" style="flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-main); font-size: 11px; padding: 6px; font-family: var(--font-code);">
+              <input type="text" id="mock-lon" placeholder="Longitude" style="flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-main); font-size: 11px; padding: 6px; font-family: var(--font-code);">
+              <button id="btn-mock-location" style="background: var(--primary); border: none; border-radius: 4px; color: var(--text-main); font-size: 11px; padding: 6px 12px; cursor: pointer; font-weight: 600;">Set</button>
+            </div>
+          </div>
+
+          <!-- Biometric Fingerprint Mocking -->
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Fingerprint Biometrics sensor</span>
+            <div style="display: flex; gap: 6px;">
+              <button id="btn-biometric-enroll" style="flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-main); font-size: 11px; padding: 6px; cursor: pointer; font-weight: 600;">Enroll ID: 1</button>
+              <button id="btn-biometric-verify" style="flex: 1; background: var(--accent-cyan); border: none; border-radius: 4px; color: var(--bg-darker); font-size: 11px; padding: 6px; cursor: pointer; font-weight: 600;">⚡ Verify fingerprint</button>
+            </div>
           </div>
         </div>
 
