@@ -60,21 +60,26 @@ Contains no automation logic. Exposes native client packages for Go, TypeScript/
 
 ### 2. Native Drivers (`/drivers`)
 
-- **Android (`drivers/adb.go`):** Spawns native `adb` commands, extracts layout XML to `/data/local/tmp/`, calculates layout-bound centers, enters text with `adb shell input text`, and captures screenshots via `adb exec-out screencap -p`.
+- **Android (`drivers/adb.go`):** Spawns native `adb` commands, extracts layout XML to `/data/local/tmp/`, calculates layout-bound centers, enters text with `adb shell input text`, and captures screenshots via `adb exec-out screencap -p`. Integrates UNIX abstract socket scanning for WebView detection, telemetry dump parses, GPS mocking, and fingerprint commands.
 - **iOS (`drivers/xcuitest.go`):** Communicates with Apple's WebDriverAgent (WDA) over HTTP, resolves selectors to W3C element IDs, and drives taps, typing, swipes, and screenshots.
 
 ### 3. Non-Blocking Auto-Wait (`/core`)
 
-Waits for attachment, visibility, and layout stability before actions execute, reducing the need for brittle sleeps.
+Waits for element attachment, visibility, and layout stability before actions execute, reducing the need for brittle sleeps.
 
 ### 4. AI-Driven Self-Healing and Auditing (`/ai`)
 
 - **Self-healing:** If a selector breaks, the AI compares the failing locator and historical node data against the current tree and proposes a healed locator.
 - **Accessibility auditing and suggestions:** Scans layouts to recommend more stable locators based on durable element properties.
 
-### 5. Interactive Web Inspector (`/inspector`)
+### 5. Interactive MoreGo Inspector (`/inspector`)
 
-A developer dashboard for hierarchy inspection, element picking, AI locator suggestions, and runnable SDK code generation.
+A Playwright-grade developer dashboard for hierarchy inspection, element picking, and test creation. Features:
+- **Responsive Sizing & Panel Minimization**: Dynamic aspect-ratio scaling bounds the viewport. Toggle buttons minimize sidebars and bottom console logs to offer an unclipped device screen view.
+- **Dynamic XPath Evaluator**: Real-time evaluation of custom XPaths highlighting matches directly on the screen canvas and tree.
+- **WebView Context Switching**: Detects and switches execution target between Native layout and active hybrid WebViews (CDP automation over UNIX sockets).
+- **Device Telemetry Dashboard**: Real-time gauges monitoring CPU usage %, memory RAM footprint (MB), and battery percentage.
+- **Capability Mocking Toolbox**: Simulated fingerprint biometrics (enroll/verify triggers) and GPS mock coordinate coordinates injection.
 
 ### 6. Telemetry Reporting (`/reporter`)
 
