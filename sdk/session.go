@@ -55,6 +55,36 @@ func (s *Session) Locator(strategy string, selector string) *Locator {
 	}
 }
 
+// GetByText constructs a locator targeting elements with specific text.
+func (s *Session) GetByText(text string) *Locator {
+	return s.Locator("TEXT", text)
+}
+
+// GetByRole constructs a locator targeting elements with specific class type.
+func (s *Session) GetByRole(role string) *Locator {
+	return s.Locator("ROLE", role)
+}
+
+// GetByLabel constructs a locator targeting elements with specific accessibility label.
+func (s *Session) GetByLabel(label string) *Locator {
+	return s.Locator("LABEL", label)
+}
+
+// GetByPlaceholder constructs a locator targeting input elements with specific placeholder.
+func (s *Session) GetByPlaceholder(placeholder string) *Locator {
+	return s.Locator("PLACEHOLDER", placeholder)
+}
+
+// GetByAccessibilityID constructs a locator targeting elements with specific content-desc/accessibility-id.
+func (s *Session) GetByAccessibilityID(id string) *Locator {
+	return s.Locator("ACCESSIBILITY_ID", id)
+}
+
+// GetByTestID constructs a locator targeting elements with specific test-id.
+func (s *Session) GetByTestID(id string) *Locator {
+	return s.Locator("TEST_ID", id)
+}
+
 // GetSource retrieves the current UI hierarchy tree layout.
 func (s *Session) GetSource(ctx context.Context, format string) (string, error) {
 	resp, err := s.device.driverClient.GetSource(ctx, &pb.GetSourceRequest{

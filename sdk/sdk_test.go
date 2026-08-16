@@ -144,3 +144,34 @@ func TestSDKFluentAPI(t *testing.T) {
 		t.Errorf("Close Session failed: %v", err)
 	}
 }
+
+func TestSDKNewLocators(t *testing.T) {
+	session := &Session{}
+	
+	loc := session.GetByText("Save").Above(session.GetByRole("Button")).Nth(1)
+	
+	protoLoc := loc.toProto()
+	
+	if protoLoc.Strategy != pb.LocatorStrategy_LOCATOR_STRATEGY_TEXT {
+		t.Errorf("Expected strategy TEXT, got %v", protoLoc.Strategy)
+	}
+	if protoLoc.Selector != "Save" {
+		t.Errorf("Expected selector 'Save', got %v", protoLoc.Selector)
+	}
+	if protoLoc.Index != 1 {
+		t.Errorf("Expected index 1, got %d", protoLoc.Index)
+	}
+	
+	if len(protoLoc.Constraints) != 1 {
+		t.Fatalf("Expected 1 constraint, got %d", len(protoLoc.Constraints))
+	}
+	
+	constraint := protoLoc.Constraints[0]
+	if constraint.Direction != pb.RelativeDirection_RELATIVE_DIRECTION_ABOVE {
+		t.Errorf("Expected direction ABOVE, got %v", constraint.Direction)
+	}
+	if constraint.Target.Strategy != pb.LocatorStrategy_LOCATOR_STRATEGY_ROLE || constraint.Target.Selector != "Button" {
+		t.Errorf("Expected target Strategy ROLE and Selector 'Button', got Strategy %v Selector %q", constraint.Target.Strategy, constraint.Target.Selector)
+	}
+}
+

@@ -2,6 +2,8 @@ package drivers
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"time"
 )
 
@@ -96,7 +98,44 @@ func init() {
 	DefaultRegistry.Register("lambdatest", func() Driver {
 		return NewCloudGridDriver("lambdatest")
 	})
+	DefaultRegistry.Register("rich_stub", func() Driver {
+		return &RichStubDriver{
+			BaseStub: BaseStub{Name: "Rich Stub Driver"},
+		}
+	})
 }
+
+type RichStubDriver struct {
+	BaseStub
+	mu    sync.Mutex
+	cache map[string]ADBXMLNode
+	idGen int
+}
+
+func (r *RichStubDriver) GetSource(ctx context.Context, format string) (string, error) {
+	return `<?xml version="1.0" encoding="utf-8"?>
+	<hierarchy rotation="0">
+		<node class="android.widget.FrameLayout" bounds="[0,0][1080,1920]" resource-id="root">
+			<node class="android.widget.Button" text="Submit" resource-id="com.example:id/submit_btn" content-desc="Submit description" bounds="[100,200][300,300]" id="btn_1"/>
+			<node class="android.widget.EditText" text="" placeholder="Enter Username" bounds="[100,400][300,500]" test-id="username_field" id="edit_1"/>
+			<node class="android.widget.TextView" text="Username Label" bounds="[100,100][300,150]" id="label_1"/>
+		</node>
+	</hierarchy>`, nil
+}
+
+func (r *RichStubDriver) FindElement(ctx context.Context, strategy string, selector string) (string, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.cache == nil {
+		r.cache = make(map[string]ADBXMLNode)
+	}
+	r.idGen++
+	elemID := fmt.Sprintf("rich_elem_%d", r.idGen)
+	// Add dummy bounds representation
+	r.cache[elemID] = ADBXMLNode{Bounds: selector}
+	return elemID, nil
+}
+
 
 // Helper to check if a driver type is registered.
 func IsDriverAvailable(driverType string) bool {

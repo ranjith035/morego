@@ -13,7 +13,7 @@ func main() {
 
 	fmt.Println("Connecting to Mobile Automation Core Engine on port 50051...")
 	// 1. Connect to gRPC core server
-	device, err := sdk.Connect(ctx, "localhost:50051", "pixel_6_pro")
+	device, err := sdk.Connect(ctx, "localhost:50051", "a5fb8bad")
 	if err != nil {
 		fmt.Printf("Connection error: %v\n", err)
 		return
@@ -31,28 +31,31 @@ func main() {
 
 	fmt.Printf("Session %s started successfully!\n", session.ID())
 
-	// 3. Perform a simple swipe gesture
-	fmt.Println("Executing swipe gesture...")
-	err = session.Swipe(ctx, 500, 1500, 500, 500, 500*time.Millisecond)
-	if err != nil {
-		fmt.Printf("Swipe failed: %v\n", err)
-	}
-
-	// 4. Try locating and clicking the Search bar (resource id in settings app is usually search_action_bar)
+	// 3. Locate and click search bar using the new GetByText API first
 	fmt.Println("Clicking Search Bar...")
-	searchBar := session.Locator("RESOURCE_ID", "com.android.settings:id/search_action_bar")
+	searchBar := session.GetByText("Search settings")
 	err = searchBar.Click(ctx)
 	if err != nil {
-		fmt.Printf("Could not click search bar (perhaps ID shifted): %v\n", err)
+		fmt.Printf("Could not click search bar: %v\n", err)
 	} else {
 		fmt.Println("Search bar clicked! Typing search query...")
-		// 5. Fill input
-		searchVal := session.Locator("CLASS_NAME", "android.widget.EditText")
-		err = searchVal.Fill(ctx, "Wi-Fi")
+		// 4. Fill search input using its standard resource-id
+		searchVal := session.Locator("RESOURCE_ID", "android:id/input")
+		err = searchVal.Fill(ctx, "developer")
 		if err != nil {
 			fmt.Printf("Failed to enter text: %v\n", err)
 		} else {
-			fmt.Println("Text 'Wi-Fi' typed successfully into Settings search field!")
+			fmt.Println("Text 'developer' typed successfully into Settings search field!")
+			
+			// Allow search results to load
+			time.Sleep(2 * time.Second)
+
+			// 5. Perform a swipe gesture on the search results screen
+			fmt.Println("Executing swipe gesture on search results...")
+			err = session.Swipe(ctx, 500, 1500, 500, 500, 500*time.Millisecond)
+			if err != nil {
+				fmt.Printf("Swipe failed: %v\n", err)
+			}
 		}
 	}
 

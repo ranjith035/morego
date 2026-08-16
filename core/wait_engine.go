@@ -41,9 +41,6 @@ func (we *WaitEngineImpl) WaitForState(ctx context.Context, sessionID string, lo
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
 	var lastBounds *BoundingBox
 	var stableTicks int
 
@@ -51,7 +48,7 @@ func (we *WaitEngineImpl) WaitForState(ctx context.Context, sessionID string, lo
 		select {
 		case <-ctx.Done():
 			return nil, fmt.Errorf("timeout waiting for locator %q to achieve state %q: %w", locator.Selector, state, ctx.Err())
-		case <-ticker.C:
+		default:
 			leVal, ok := we.container.Resolve("LocatorEngine")
 			if !ok {
 				return nil, fmt.Errorf("LocatorEngine not wired in container")
@@ -64,8 +61,10 @@ func (we *WaitEngineImpl) WaitForState(ctx context.Context, sessionID string, lo
 				lastBounds = nil
 				stableTicks = 0
 				if state == WaitStateAttached {
+					time.Sleep(interval)
 					continue
 				}
+				time.Sleep(interval)
 				continue
 			}
 
@@ -79,6 +78,7 @@ func (we *WaitEngineImpl) WaitForState(ctx context.Context, sessionID string, lo
 			if !visible {
 				lastBounds = nil
 				stableTicks = 0
+				time.Sleep(interval)
 				continue
 			}
 			if state == WaitStateVisible {
@@ -102,18 +102,21 @@ func (we *WaitEngineImpl) WaitForState(ctx context.Context, sessionID string, lo
 				if stable {
 					return elem, nil
 				}
+				time.Sleep(interval)
 				continue
 			}
 
 			// Enabled check
 			enabled := elem.Attributes["enabled"] != "false" && elem.Attributes["disabled"] != "true"
 			if !enabled {
+				time.Sleep(interval)
 				continue
 			}
 			if state == WaitStateEnabled {
 				if stable {
 					return elem, nil
 				}
+				time.Sleep(interval)
 				continue
 			}
 
@@ -123,8 +126,10 @@ func (we *WaitEngineImpl) WaitForState(ctx context.Context, sessionID string, lo
 				if clickable && stable {
 					return elem, nil
 				}
+				time.Sleep(interval)
 				continue
 			}
+			time.Sleep(interval)
 		}
 	}
 }

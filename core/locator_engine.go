@@ -88,8 +88,12 @@ func (le *LocatorEngineImpl) FindElements(ctx context.Context, sessionID string,
 	// 4. Map matching nodes to elements
 	elements := make([]*Element, 0, len(nodes))
 	for _, n := range nodes {
+		id := n.Attributes["id"]
+		if id == "" {
+			id = generateXPath(n)
+		}
 		elements = append(elements, &Element{
-			ID:         n.Attributes["id"],
+			ID:         id,
 			TagName:    n.TagName,
 			Text:       n.Text,
 			Bounds:     n.Bounds,

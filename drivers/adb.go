@@ -249,6 +249,8 @@ func (d *ADBDriver) FindElement(ctx context.Context, strategy string, selector s
 			match = node.Text == selector || strings.Contains(node.Text, selector)
 		case "CLASS_NAME", "CLASS":
 			match = node.Class == selector
+		case "BOUNDS":
+			match = node.Bounds == selector
 		}
 
 		if match {
