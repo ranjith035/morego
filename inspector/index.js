@@ -33,7 +33,12 @@ const domElements = {
   btnKeyBack: document.getElementById('btn-key-back'),
   btnKeyHome: document.getElementById('btn-key-home'),
   btnKeyApps: document.getElementById('btn-key-apps'),
-  btnCopyCode: document.getElementById('btn-copy-code')
+  btnCopyCode: document.getElementById('btn-copy-code'),
+  btnToggleLeft: document.getElementById('btn-toggle-left'),
+  btnToggleRight: document.getElementById('btn-toggle-right'),
+  btnToggleFooter: document.getElementById('btn-toggle-footer'),
+  panelLeft: document.getElementById('panel-left'),
+  panelRight: document.getElementById('panel-right')
 };
 
 // Initialize
@@ -49,6 +54,28 @@ domElements.languageSelect.addEventListener('change', (e) => {
     updatePropertiesAndCode(activeElement);
   }
   addConsoleLog(`SDK compilation target updated to ${selectedLanguage.toUpperCase()}`, "info");
+});
+
+// Toggle Sidebar Panels & Bottom Console (Minimize/Expand)
+domElements.btnToggleLeft.addEventListener('click', () => {
+  const isCollapsed = domElements.panelLeft.classList.toggle('collapsed');
+  domElements.btnToggleLeft.textContent = isCollapsed ? '▶' : '◀';
+  domElements.btnToggleLeft.title = isCollapsed ? 'Expand Panel' : 'Collapse Panel';
+  addConsoleLog(`Hierarchy Tree sidebar ${isCollapsed ? 'collapsed' : 'expanded'}.`, "info");
+});
+
+domElements.btnToggleRight.addEventListener('click', () => {
+  const isCollapsed = domElements.panelRight.classList.toggle('collapsed');
+  domElements.btnToggleRight.textContent = isCollapsed ? '◀' : '▶';
+  domElements.btnToggleRight.title = isCollapsed ? 'Expand Panel' : 'Collapse Panel';
+  addConsoleLog(`Properties & Code sidebar ${isCollapsed ? 'collapsed' : 'expanded'}.`, "info");
+});
+
+domElements.btnToggleFooter.addEventListener('click', () => {
+  const isCollapsed = document.body.classList.toggle('footer-collapsed');
+  domElements.btnToggleFooter.textContent = isCollapsed ? '▲ Expand Logs' : '▼ Collapse Logs';
+  domElements.btnToggleFooter.title = isCollapsed ? 'Expand Console Logs' : 'Collapse Console Logs';
+  addConsoleLog(`Console logs footer ${isCollapsed ? 'collapsed' : 'expanded'}.`, "info");
 });
 
 // Copy script to clipboard

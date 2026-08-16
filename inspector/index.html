@@ -207,24 +207,44 @@
     /* Core workspace layout */
     .workspace {
       display: grid;
-      grid-template-columns: 380px 1fr 400px;
+      grid-template-columns: auto 1fr auto;
       flex: 1;
       height: calc(100vh - 200px);
       overflow: hidden;
+      transition: height 0.3s ease;
     }
 
     .workspace-panel {
+      width: 380px;
       background-color: var(--bg-dark);
       border-right: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
       height: 100%;
       overflow: hidden;
+      transition: width 0.3s ease;
     }
 
     .workspace-panel.right {
+      width: 400px;
       border-right: none;
       border-left: 1px solid var(--border-color);
+      transition: width 0.3s ease;
+    }
+
+    /* Collapsible Panel States */
+    .workspace-panel.collapsed {
+      width: 48px !important;
+    }
+    
+    .workspace-panel.collapsed .panel-header {
+      padding: 14px 0;
+      justify-content: center !important;
+    }
+    
+    .workspace-panel.collapsed .panel-title-text,
+    .workspace-panel.collapsed .panel-content {
+      display: none !important;
     }
 
     .panel-header {
@@ -542,6 +562,20 @@
       display: grid;
       grid-template-columns: 60% 40%;
       overflow: hidden;
+      transition: height 0.3s ease;
+    }
+
+    /* Collapsed Console States */
+    body.footer-collapsed footer {
+      height: 33px !important;
+    }
+    
+    body.footer-collapsed .workspace {
+      height: calc(100vh - 93px) !important;
+    }
+    
+    body.footer-collapsed .footer-content {
+      display: none !important;
     }
 
     .footer-panel {
@@ -661,8 +695,11 @@
   <!-- Workspace columns -->
   <div class="workspace">
     <!-- UI Hierarchy Explorer -->
-    <div class="workspace-panel">
-      <div class="panel-header">UI Hierarchy Tree</div>
+    <div class="workspace-panel" id="panel-left">
+      <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <span class="panel-title-text">UI Hierarchy Tree</span>
+        <button id="btn-toggle-left" title="Collapse Panel" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; transition: transform 0.2s;">◀</button>
+      </div>
       <div class="panel-content" id="hierarchy-tree-content">
         <div style="padding: 15px; color: var(--text-muted); font-size: 13px;">No active layout. Click Refresh to load.</div>
       </div>
@@ -688,8 +725,11 @@
     </div>
 
     <!-- Properties & Codegen -->
-    <div class="workspace-panel right">
-      <div class="panel-header">Details & Generated Code</div>
+    <div class="workspace-panel right" id="panel-right">
+      <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <button id="btn-toggle-right" title="Collapse Panel" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; transition: transform 0.2s;">▶</button>
+        <span class="panel-title-text">Details & Generated Code</span>
+      </div>
       <div class="panel-content" style="display: flex; flex-direction: column; gap: 15px;">
         
         <!-- Element Properties Card -->
@@ -749,7 +789,10 @@
   <!-- Bottom Panel (Console & Trace Timeline) -->
   <footer>
     <div class="footer-panel">
-      <div class="footer-header">stdout debug console log</div>
+      <div class="footer-header" style="display: flex; justify-content: space-between; align-items: center; padding-right: 15px;">
+        <span>stdout debug console log</span>
+        <button id="btn-toggle-footer" title="Collapse Console Logs" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; font-weight: bold; transition: all 0.2s;">▼ Collapse Logs</button>
+      </div>
       <div class="footer-content" id="log-content">
         <div class="log-line info">[15:42:01] Initializing connection to pixel_6_pro...</div>
         <div class="log-line success">[15:42:02] Core Engine listening on gRPC port 50051</div>
