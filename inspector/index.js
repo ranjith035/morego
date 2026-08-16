@@ -1,384 +1,425 @@
-// State variables
-let activeNode = 'submit';
-let activePlatform = 'android';
-let selectedLanguage = 'typescript';
-let isRecording = true;
+// Active state variables
+let sessionId = "";
+let physicalWidth = 1080;
+let physicalHeight = 2400;
+let selectedLanguage = "typescript";
+let activeElement = null;
 
-// Simulated element database
-const elementDatabase = {
-  title: {
-    tagName: 'TextView',
-    class: 'android.widget.TextView',
-    text: 'Welcome Back',
-    resourceId: 'com.example:id/title_label',
-    contentDesc: '',
-    accessibilityId: '',
-    bestLocator: 'GetByText("Welcome Back")',
-    aiSuggestion: 'GetByText("Welcome Back")',
-    aiReason: 'Matched node text. Since this is static text, GetByText is the most robust strategy.',
-    confidence: '92%',
-    codeTemplate: {
-      typescript: `await session.locator('TEXT', 'Welcome Back').isVisible();`,
-      python: `await session.locator('TEXT', 'Welcome Back').is_visible()`,
-      go: `_ = session.Locator("TEXT", "Welcome Back").AssertVisible(ctx)`,
-      java: `session.locator("TEXT", "Welcome Back").assertVisible();`,
-      csharp: `await session.Locator("TEXT", "Welcome Back").AssertVisibleAsync();`,
-      kotlin: `session.locator("TEXT", "Welcome Back").assertVisible()`
-    }
-  },
-  username: {
-    tagName: 'EditText',
-    class: 'android.widget.EditText',
-    text: 'admin',
-    resourceId: 'com.example:id/username_field',
-    contentDesc: 'Username input',
-    accessibilityId: 'Username input',
-    bestLocator: 'GetByAccessibilityId("Username input")',
-    aiSuggestion: 'GetByAccessibilityId("Username input")',
-    aiReason: 'Highly stable accessibility identifier found. Accessibility IDs remain unchanged during layout moves.',
-    confidence: '99%',
-    codeTemplate: {
-      typescript: `await session.locator('ACCESSIBILITY_ID', 'Username input').fill('admin');`,
-      python: `await session.locator('ACCESSIBILITY_ID', 'Username input').fill('admin')`,
-      go: `_ = session.Locator("ACCESSIBILITY_ID", "Username input").Fill(ctx, "admin")`,
-      java: `session.locator("ACCESSIBILITY_ID", "Username input").fill("admin");`,
-      csharp: `await session.Locator("ACCESSIBILITY_ID", "Username input").FillAsync("admin");`,
-      kotlin: `session.locator("ACCESSIBILITY_ID", "Username input").fill("admin")`
-    }
-  },
-  password: {
-    tagName: 'EditText',
-    class: 'android.widget.EditText',
-    text: '••••••••',
-    resourceId: 'com.example:id/password_field',
-    contentDesc: 'Password input',
-    accessibilityId: 'Password input',
-    bestLocator: 'GetByAccessibilityId("Password input")',
-    aiSuggestion: 'GetByAccessibilityId("Password input")',
-    aiReason: 'Highly stable accessibility identifier found. Strongly preferred over index relative tags.',
-    confidence: '99%',
-    codeTemplate: {
-      typescript: `await session.locator('ACCESSIBILITY_ID', 'Password input').fill('my_password');`,
-      python: `await session.locator('ACCESSIBILITY_ID', 'Password input').fill('my_password')`,
-      go: `_ = session.Locator("ACCESSIBILITY_ID", "Password input").Fill(ctx, "my_password")`,
-      java: `session.locator("ACCESSIBILITY_ID", "Password input").fill("my_password");`,
-      csharp: `await session.Locator("ACCESSIBILITY_ID", "Password input").FillAsync("my_password");`,
-      kotlin: `session.locator("ACCESSIBILITY_ID", "Password input").fill("my_password")`
-    }
-  },
-  submit: {
-    tagName: 'Button',
-    class: 'android.widget.Button',
-    text: 'Login',
-    resourceId: 'com.example:id/submit_btn',
-    contentDesc: 'Login button',
-    accessibilityId: 'Login button',
-    bestLocator: 'GetByAccessibilityId("Login button")',
-    aiSuggestion: 'GetByAccessibilityId("Login button")',
-    aiReason: 'Found content-desc "Login button". Conforms to accessibility-first standards and is immune to UI location shifts.',
-    confidence: '98%',
-    codeTemplate: {
-      typescript: `await session.locator('ACCESSIBILITY_ID', 'Login button').click();`,
-      python: `await session.locator('ACCESSIBILITY_ID', 'Login button').click()`,
-      go: `_ = session.Locator("ACCESSIBILITY_ID", "Login button").Click(ctx)`,
-      java: `session.locator("ACCESSIBILITY_ID", "Login button").click();`,
-      csharp: `await session.Locator("ACCESSIBILITY_ID", "Login button").ClickAsync();`,
-      kotlin: `session.locator("ACCESSIBILITY_ID", "Login button").click()`
-    }
-  }
-};
-
-// Full recorded script templates based on language selection
-const fullScripts = {
-  typescript: `import { mobile } from '@mobile/playwright';
-
-(async () => {
-  const device = await mobile.connect({ deviceId: 'pixel_6_pro' });
-  const session = await device.newSession({ appId: 'com.example.loginapp' });
-
-  await session.locator('ACCESSIBILITY_ID', 'Username input').fill('admin');
-  await session.locator('ACCESSIBILITY_ID', 'Password input').fill('password');
-  await session.locator('ACCESSIBILITY_ID', 'Login button').click();
-
-  await session.close();
-})();`,
-  python: `import asyncio
-from mobile_playwright import mobile
-
-async def main():
-    device = await mobile.connect(device_id='pixel_6_pro')
-    session = await device.new_session(app_id='com.example.loginapp')
-
-    await session.locator('ACCESSIBILITY_ID', 'Username input').fill('admin')
-    await session.locator('ACCESSIBILITY_ID', 'Password input').fill('password')
-    await session.locator('ACCESSIBILITY_ID', 'Login button').click()
-
-    await session.close()
-
-asyncio.run(main())`,
-  go: `package main
-
-import (
-	"context"
-	"github.com/ranjith035/morego/sdk"
-)
-
-func main() {
-	ctx := context.Background()
-	device, _ := sdk.Connect(ctx, "pixel_6_pro")
-	session, _ := device.NewSession(ctx, "com.example.loginapp")
-	defer session.Close(ctx)
-
-	_ = session.Locator("ACCESSIBILITY_ID", "Username input").Fill(ctx, "admin")
-	_ = session.Locator("ACCESSIBILITY_ID", "Password input").Fill(ctx, "password")
-	_ = session.Locator("ACCESSIBILITY_ID", "Login button").Click(ctx)
-}`,
-  java: `import org.automation.Mobile;
-import org.automation.Session;
-
-public class RecordedTest {
-    public static void main(String[] args) {
-        var device = Mobile.connect("pixel_6_pro");
-        var session = device.newSession("com.example.loginapp");
-
-        session.locator("ACCESSIBILITY_ID", "Username input").fill("admin");
-        session.locator("ACCESSIBILITY_ID", "Password input").fill("password");
-        session.locator("ACCESSIBILITY_ID", "Login button").click();
-
-        session.close();
-    }
-}`,
-  csharp: `using System.Threading.Tasks;
-using Automation;
-
-class Program {
-    static async Task Main() {
-        var device = await Mobile.ConnectAsync("pixel_6_pro");
-        var session = await device.NewSessionAsync("com.example.loginapp");
-
-        await session.Locator("ACCESSIBILITY_ID", "Username input").FillAsync("admin");
-        await session.Locator("ACCESSIBILITY_ID", "Password input").FillAsync("password");
-        await session.Locator("ACCESSIBILITY_ID", "Login button").ClickAsync();
-
-        await session.CloseAsync();
-    }
-}`,
-  kotlin: `import org.automation.mobile
-
-suspend fun main() {
-    val device = mobile.connect("pixel_6_pro")
-    val session = device.newSession("com.example.loginapp")
-
-    session.locator("ACCESSIBILITY_ID", "Username input").fill("admin")
-    session.locator("ACCESSIBILITY_ID", "Password input").fill("password")
-    session.locator("ACCESSIBILITY_ID", "Login button").click()
-
-    session.close()
-}`
-};
-
-// Elements DOM Cache
+// DOM Cache
 const domElements = {
-  boxes: {
-    title: document.getElementById('box-title'),
-    username: document.getElementById('box-username'),
-    password: document.getElementById('box-password'),
-    submit: document.getElementById('box-submit')
-  },
-  treeNodes: {
-    title: document.getElementById('tree-title'),
-    username: document.getElementById('tree-username'),
-    password: document.getElementById('tree-password'),
-    submit: document.getElementById('tree-submit')
-  },
+  treeContent: document.getElementById('hierarchy-tree-content'),
+  deviceScreen: document.getElementById('device-screen'),
+  nodeTag: document.getElementById('node-tag'),
+  nodeClass: document.getElementById('node-class'),
+  nodeText: document.getElementById('node-text'),
+  nodeResourceId: document.getElementById('node-resource-id'),
+  nodeDesc: document.getElementById('node-desc'),
+  nodeBounds: document.getElementById('node-bounds'),
+  actionTap: document.getElementById('action-tap'),
   locatorInput: document.getElementById('locator-input'),
+  aiConfidence: document.getElementById('ai-confidence'),
   aiLocatorText: document.getElementById('ai-locator-text'),
-  aiReasonText: document.querySelector('.ai-card-reason'),
-  aiConfidenceBadge: document.querySelector('.ai-confidence-badge'),
+  aiReason: document.getElementById('ai-reason'),
   generatedCodeBox: document.getElementById('generated-code-box'),
   languageSelect: document.getElementById('language-select'),
-  recordBtn: document.getElementById('record-btn'),
-  recordText: document.getElementById('record-text'),
-  pulseDot: document.querySelector('.pulse-dot'),
+  refreshBtn: document.getElementById('refresh-btn'),
   logContent: document.getElementById('log-content'),
-  platformAndroid: document.getElementById('opt-android'),
-  platformIos: document.getElementById('opt-ios'),
   deviceInfoText: document.getElementById('device-info-text')
 };
 
-// Initial state updates
-updateUI();
+// Initialize
+addConsoleLog("Live Web Inspector initialized. Ready to sync with Go Core server.", "info");
+fetchLiveState();
 
-// Platform Toggles
-domElements.platformAndroid.addEventListener('click', () => {
-  activePlatform = 'android';
-  domElements.platformAndroid.classList.add('active');
-  domElements.platformIos.classList.remove('active');
-  domElements.deviceInfoText.textContent = 'Pixel 6 Pro (ADB Connection: 127.0.0.1:5555)';
-  addConsoleLog('Switched platform to Android. ADB connection established.', 'info');
-});
+// Event Listeners
+domElements.refreshBtn.addEventListener('click', fetchLiveState);
 
-domElements.platformIos.addEventListener('click', () => {
-  activePlatform = 'ios';
-  domElements.platformIos.classList.add('active');
-  domElements.platformAndroid.classList.remove('active');
-  domElements.deviceInfoText.textContent = 'iPhone 14 Pro Simulator (XCUITest Agent: Port 8100)';
-  addConsoleLog('Switched platform to iOS. Connected to local XCUITest agent.', 'info');
-});
-
-// Sync Select Language
 domElements.languageSelect.addEventListener('change', (e) => {
   selectedLanguage = e.target.value;
-  updateUI();
-  addConsoleLog(`SDK compilation target updated to ${selectedLanguage.toUpperCase()}`, 'info');
+  if (activeElement) {
+    updatePropertiesAndCode(activeElement);
+  }
+  addConsoleLog(`SDK compilation target updated to ${selectedLanguage.toUpperCase()}`, "info");
 });
 
-// Setup Device canvas highlight triggers
-Object.keys(domElements.boxes).forEach((key) => {
-  const box = domElements.boxes[key];
+domElements.actionTap.addEventListener('click', async () => {
+  if (!activeElement || !sessionId) return;
+  const bounds = parseBounds(activeElement.bounds);
+  if (!bounds) return;
+
+  const clickX = Math.round(bounds.x1 + bounds.width / 2);
+  const clickY = Math.round(bounds.y1 + bounds.height / 2);
+
+  addConsoleLog(`Sending Tap action to device at (${clickX}, ${clickY})...`, "info");
   
-  box.addEventListener('mouseenter', () => {
-    highlightElement(key);
-  });
-
-  box.addEventListener('mouseleave', () => {
-    unhighlightElement(key);
-  });
-
-  box.addEventListener('click', () => {
-    selectElement(key);
-  });
+  try {
+    const resp = await fetch("/api/session/action/click", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: sessionId,
+        x: clickX,
+        y: clickY
+      })
+    });
+    
+    if (resp.ok) {
+      addConsoleLog(`Tap action injected successfully. Auto-refreshing in 1.5s...`, "success");
+      setTimeout(fetchLiveState, 1500);
+    } else {
+      const errData = await resp.json();
+      addConsoleLog(`Failed to inject tap: ${errData.error}`, "warn");
+    }
+  } catch (err) {
+    addConsoleLog(`Error sending tap action: ${err.message}`, "warn");
+  }
 });
 
-// Setup Tree Node highlight triggers
-Object.keys(domElements.treeNodes).forEach((key) => {
-  const node = domElements.treeNodes[key];
+// Fetch layout XML and Base64 screenshot from server
+async function fetchLiveState() {
+  addConsoleLog("Syncing layout hierarchy and screen graphics from target device...", "info");
+  domElements.refreshBtn.disabled = true;
+  domElements.refreshBtn.style.opacity = "0.6";
 
-  node.addEventListener('mouseenter', () => {
-    highlightElement(key);
-  });
+  try {
+    const response = await fetch("/api/session/state");
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.error || "Failed to fetch session state");
+    }
 
-  node.addEventListener('mouseleave', () => {
-    unhighlightElement(key);
-  });
+    const data = await response.json();
+    sessionId = data.sessionId;
+    
+    // 1. Update Device Info
+    domElements.deviceInfoText.textContent = `Xiaomi a5fb8bad (Active Session: ${sessionId})`;
+    
+    // 2. Load Base64 screenshot
+    domElements.deviceScreen.style.backgroundImage = `url(data:image/png;base64,${data.screenshot})`;
+    
+    // 3. Parse XML Tree
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(data.xml, "text/xml");
+    
+    // 4. Extract physical dimensions from root hierarchy bounds if available
+    const rootNode = xmlDoc.getElementsByTagName("hierarchy")[0];
+    if (rootNode) {
+      // Find children with bounds to get physical width/height
+      const childNodes = xmlDoc.getElementsByTagName("node");
+      for (let i = 0; i < childNodes.length; i++) {
+        const bStr = childNodes[i].getAttribute("bounds");
+        const b = parseBounds(bStr);
+        if (b) {
+          physicalWidth = Math.max(physicalWidth, b.x2);
+          physicalHeight = Math.max(physicalHeight, b.y2);
+        }
+      }
+    }
+    
+    // Scale screen element container to match device aspect ratio
+    const screenHeight = 552; // fixed frame height
+    const screenWidth = Math.round(screenHeight * (physicalWidth / physicalHeight));
+    domElements.deviceScreen.style.width = `${screenWidth}px`;
+    domElements.deviceScreen.style.height = `${screenHeight}px`;
 
-  node.addEventListener('click', () => {
-    selectElement(key);
-  });
-});
+    // Clear highlights overlay and hierarchy panel
+    domElements.deviceScreen.innerHTML = "";
+    domElements.treeContent.innerHTML = "";
+    activeElement = null;
+    resetPropertiesCard();
 
-// Locator search matching preview filter
-domElements.locatorInput.addEventListener('input', (e) => {
-  const query = e.target.value.toLowerCase().trim();
-  if (query === '') {
-    clearHighlightBorders();
+    // 5. Render layout tree and overlays recursively
+    renderTree(xmlDoc.documentElement, domElements.treeContent);
+    addConsoleLog("UI hierarchy mapped successfully. Interactive overlays ready.", "success");
+
+  } catch (error) {
+    addConsoleLog(`Sync error: ${error.message}`, "warn");
+    domElements.deviceInfoText.textContent = "Offline (No Active Session)";
+    domElements.treeContent.innerHTML = `<div style="padding: 15px; color: var(--accent-red); font-size: 13px;">Error: ${error.message}. Ensure core server is running with active physical device session.</div>`;
+  } finally {
+    domElements.refreshBtn.disabled = false;
+    domElements.refreshBtn.style.opacity = "1";
+  }
+}
+
+// Parse boundary string "[x1,y1][x2,y2]"
+function parseBounds(boundsStr) {
+  if (!boundsStr) return null;
+  const match = boundsStr.match(/\[(\d+),(\d+)\]\[(\d+),(\d+)\]/);
+  if (!match) return null;
+  return {
+    x1: parseInt(match[1]),
+    y1: parseInt(match[2]),
+    x2: parseInt(match[3]),
+    y2: parseInt(match[4]),
+    width: parseInt(match[3]) - parseInt(match[1]),
+    height: parseInt(match[4]) - parseInt(match[2])
+  };
+}
+
+// Recursively parse layout tree and append to DOM elements
+function renderTree(xmlNode, parentDOM) {
+  const tagName = xmlNode.tagName;
+  if (!tagName || tagName === "hierarchy") {
+    Array.from(xmlNode.childNodes).forEach(child => renderTree(child, parentDOM));
     return;
   }
 
-  // Basic matcher
-  Object.keys(elementDatabase).forEach((key) => {
-    const data = elementDatabase[key];
-    const box = domElements.boxes[key];
-    
-    const matchesQuery = 
-      key.includes(query) || 
-      data.text.toLowerCase().includes(query) || 
-      data.resourceId.toLowerCase().includes(query) ||
-      data.bestLocator.toLowerCase().includes(query);
+  const className = xmlNode.getAttribute("class") || "";
+  const text = xmlNode.getAttribute("text") || "";
+  const resourceId = xmlNode.getAttribute("resource-id") || "";
+  const contentDesc = xmlNode.getAttribute("content-desc") || "";
+  const bounds = xmlNode.getAttribute("bounds") || "";
 
-    if (matchesQuery) {
-      box.style.borderColor = '#06b6d4'; // cyan matching
-      box.style.backgroundColor = 'rgba(6, 182, 212, 0.2)';
-    } else {
-      box.style.borderColor = 'transparent';
-      box.style.backgroundColor = 'transparent';
+  const shortClassName = className.split(".").pop() || className;
+
+  const treeNode = document.createElement("div");
+  treeNode.className = "tree-node";
+
+  const contentDiv = document.createElement("div");
+  contentDiv.className = "tree-node-content";
+
+  let labelText = `<span class="tree-tag">${shortClassName}</span>`;
+  if (resourceId) {
+    labelText += ` <span class="tree-attr">id</span>="${escapeHTML(resourceId.split("/").pop())}"`;
+  }
+  if (text) {
+    labelText += ` <span class="tree-attr">text</span>="${escapeHTML(text.substring(0, 15))}"`;
+  }
+  if (contentDesc) {
+    labelText += ` <span class="tree-attr">desc</span>="${escapeHTML(contentDesc.substring(0, 15))}"`;
+  }
+  contentDiv.innerHTML = `<span>&lt;</span>${labelText}<span>/&gt;</span>`;
+  treeNode.appendChild(contentDiv);
+
+  const elementData = {
+    tagName: shortClassName,
+    className: className,
+    text: text,
+    resourceId: resourceId,
+    contentDesc: contentDesc,
+    bounds: bounds
+  };
+
+  // Generate highlights box overlay
+  const parsedBounds = parseBounds(bounds);
+  let overlayBox = null;
+  if (parsedBounds && parsedBounds.width > 0 && parsedBounds.height > 0) {
+    overlayBox = createOverlayBox(elementData, parsedBounds, treeNode, contentDiv);
+  }
+
+  contentDiv.addEventListener("click", (e) => {
+    e.stopPropagation();
+    selectNode(elementData, treeNode, contentDiv, overlayBox);
+  });
+
+  // Recursively append children nodes
+  const childrenContainer = document.createElement("div");
+  childrenContainer.className = "tree-children";
+  let hasChildren = false;
+  
+  Array.from(xmlNode.childNodes).forEach(child => {
+    if (child.nodeType === 1) { // ELEMENT_NODE
+      renderTree(child, childrenContainer);
+      hasChildren = true;
     }
   });
-});
 
-// Setup Recording control toggles
-domElements.recordBtn.addEventListener('click', () => {
-  isRecording = !isRecording;
-  if (isRecording) {
-    domElements.recordText.textContent = 'Recording';
-    domElements.pulseDot.style.display = 'block';
-    domElements.recordBtn.style.background = 'linear-gradient(to right, #ef4444, #dc2626)';
-    addConsoleLog('Recorder resumed. Listening for gestures...', 'success');
-  } else {
-    domElements.recordText.textContent = 'Paused';
-    domElements.pulseDot.style.display = 'none';
-    domElements.recordBtn.style.background = 'linear-gradient(to right, #4b5563, #374151)';
-    addConsoleLog('Recorder paused. Execution stubs won\'t generate.', 'warn');
+  if (hasChildren) {
+    treeNode.appendChild(childrenContainer);
   }
-  updateUI();
-});
-
-// Action functions
-function highlightElement(key) {
-  domElements.boxes[key].classList.add('active');
-  domElements.treeNodes[key].classList.add('active');
+  parentDOM.appendChild(treeNode);
 }
 
-function unhighlightElement(key) {
-  domElements.boxes[key].classList.remove('active');
-  domElements.treeNodes[key].classList.remove('active');
+// Create absolute positioned box overlay matching physical element dimensions
+function createOverlayBox(elementData, parsedBounds, treeNode, contentDiv) {
+  const scaleX = domElements.deviceScreen.clientWidth / physicalWidth;
+  const scaleY = domElements.deviceScreen.clientHeight / physicalHeight;
+
+  const box = document.createElement("div");
+  box.className = "element-highlight-box";
+  box.style.left = `${parsedBounds.x1 * scaleX}px`;
+  box.style.top = `${parsedBounds.y1 * scaleY}px`;
+  box.style.width = `${parsedBounds.width * scaleX}px`;
+  box.style.height = `${parsedBounds.height * scaleY}px`;
+
+  box.addEventListener("mouseenter", () => {
+    box.classList.add("active");
+    contentDiv.classList.add("active");
+  });
+
+  box.addEventListener("mouseleave", () => {
+    box.classList.remove("active");
+    contentDiv.classList.remove("active");
+  });
+
+  box.addEventListener("click", (e) => {
+    e.stopPropagation();
+    selectNode(elementData, treeNode, contentDiv, box);
+  });
+
+  domElements.deviceScreen.appendChild(box);
+  return box;
 }
 
-function selectElement(key) {
-  activeNode = key;
-  
+// Update picked node details panel
+function selectNode(elementData, treeNode, contentDiv, overlayBox) {
+  activeElement = elementData;
+
   // Clear previous selections
-  Object.keys(domElements.treeNodes).forEach((k) => {
-    domElements.treeNodes[k].style.backgroundColor = 'transparent';
-    domElements.boxes[k].style.borderStyle = 'solid';
-  });
+  document.querySelectorAll(".tree-node-content").forEach(el => el.style.backgroundColor = "transparent");
+  document.querySelectorAll(".element-highlight-box").forEach(el => el.classList.remove("selected"));
 
-  // Apply visual style
-  domElements.treeNodes[key].style.backgroundColor = 'var(--bg-input)';
-  domElements.boxes[key].style.borderStyle = 'double';
+  // Apply visual indicators
+  contentDiv.style.backgroundColor = "var(--bg-input)";
+  if (overlayBox) {
+    overlayBox.classList.add("selected");
+  }
 
-  updateUI();
+  updatePropertiesAndCode(elementData);
   
-  const data = elementDatabase[key];
-  addConsoleLog(`Inspector picked: <${data.tagName} resource-id="${data.resourceId}" />`, 'success');
+  // Expand tree node ancestors automatically to display selection path
+  let parent = treeNode.parentElement;
+  while (parent && parent.className === "tree-children") {
+    parent.style.display = "block";
+    parent = parent.parentElement.parentElement;
+  }
+
+  addConsoleLog(`Selected node: <${elementData.tagName} resource-id="${elementData.resourceId || 'N/A'}" />`, "info");
 }
 
-function updateUI() {
-  const data = elementDatabase[activeNode];
-  if (!data) return;
+function updatePropertiesAndCode(elementData) {
+  // Update properties fields
+  domElements.nodeTag.textContent = elementData.tagName || "N/A";
+  domElements.nodeClass.textContent = elementData.className || "N/A";
+  domElements.nodeText.textContent = elementData.text || "N/A";
+  domElements.nodeResourceId.textContent = elementData.resourceId || "N/A";
+  domElements.nodeDesc.textContent = elementData.contentDesc || "N/A";
+  domElements.nodeBounds.textContent = elementData.bounds || "N/A";
 
-  // Update Locator info
-  domElements.locatorInput.value = data.bestLocator;
-  
-  // Update AI Box
-  domElements.aiLocatorText.textContent = data.aiSuggestion;
-  domElements.aiReasonText.textContent = data.aiReason;
-  domElements.aiConfidenceBadge.textContent = `${data.confidence} Confidence`;
+  // Calculate best locator strategy
+  let strategy = "XPATH";
+  let selector = "";
+  let confidence = "50%";
+  let reason = "Fallback to absolute layout path. No stable element identifiers found.";
 
-  // Update Generated Code Editor block
-  if (isRecording) {
-    domElements.generatedCodeBox.textContent = data.codeTemplate[selectedLanguage];
+  if (elementData.contentDesc) {
+    strategy = "ACCESSIBILITY_ID";
+    selector = elementData.contentDesc;
+    confidence = "99%";
+    reason = "Durable content-desc found. Immunizes selector against structural moves.";
+  } else if (elementData.resourceId && (elementData.resourceId.includes("test_id") || elementData.resourceId.includes("testid"))) {
+    strategy = "TEST_ID";
+    selector = elementData.resourceId.split("/").pop() || elementData.resourceId;
+    confidence = "98%";
+    reason = "Durable developer test ID found. Ideal for UI integration tests.";
+  } else if (elementData.text && elementData.text.length > 0 && elementData.text.length <= 30) {
+    strategy = "TEXT";
+    selector = elementData.text;
+    confidence = "95%";
+    reason = "Target matches unique page text. Preferred locator in Playwright paradigm.";
+  } else if (elementData.resourceId) {
+    strategy = "RESOURCE_ID";
+    selector = elementData.resourceId;
+    confidence = "90%";
+    reason = "Platform layout resource ID found. Subject to vendor modification.";
   } else {
-    // Show full script if recording is paused/complete
-    domElements.generatedCodeBox.textContent = fullScripts[selectedLanguage];
+    // Generate simple XPath fallback
+    strategy = "XPATH";
+    selector = `//${elementData.tagName || "node"}[@class='${elementData.className}']`;
+    confidence = "60%";
+    reason = "Absolute class lookup fallback. Structural shifts may break this path.";
+  }
+
+  // Update Locator text
+  domElements.locatorInput.value = formatLocatorDisplay(strategy, selector);
+
+  // Update AI suggest card
+  domElements.aiLocatorText.textContent = formatLocatorDisplay(strategy, selector);
+  domElements.aiConfidence.textContent = `${confidence} Confidence`;
+  domElements.aiReason.textContent = reason;
+
+  // Generate code block
+  domElements.generatedCodeBox.textContent = getSDKCodeSnippet(strategy, selector, selectedLanguage);
+}
+
+function formatLocatorDisplay(strategy, selector) {
+  switch (strategy) {
+    case "ACCESSIBILITY_ID":
+      return `GetByAccessibilityID("${selector}")`;
+    case "TEST_ID":
+      return `GetByTestID("${selector}")`;
+    case "TEXT":
+      return `GetByText("${selector}")`;
+    case "RESOURCE_ID":
+      return `Locator("RESOURCE_ID", "${selector}")`;
+    default:
+      return `Locator("XPATH", "${selector}")`;
   }
 }
 
-function clearHighlightBorders() {
-  Object.keys(domElements.boxes).forEach((k) => {
-    domElements.boxes[k].style.borderColor = 'var(--accent-green)';
-    domElements.boxes[k].style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
-  });
+function getSDKCodeSnippet(strategy, selector, language) {
+  const isClickable = true; // Default to click action generator
+  switch (language) {
+    case "typescript":
+      if (strategy === "ACCESSIBILITY_ID") return `await session.getByAccessibilityID("${selector}").click();`;
+      if (strategy === "TEXT") return `await session.getByText("${selector}").click();`;
+      if (strategy === "TEST_ID") return `await session.getByTestID("${selector}").click();`;
+      return `await session.locator("${strategy}", "${selector}").click();`;
+
+    case "go":
+      if (strategy === "ACCESSIBILITY_ID") return `err = session.GetByAccessibilityID("${selector}").Click(ctx)`;
+      if (strategy === "TEXT") return `err = session.GetByText("${selector}").Click(ctx)`;
+      if (strategy === "TEST_ID") return `err = session.GetByTestID("${selector}").Click(ctx)`;
+      return `err = session.Locator("${strategy}", "${selector}").Click(ctx)`;
+
+    case "python":
+      if (strategy === "ACCESSIBILITY_ID") return `await session.get_by_accessibility_id("${selector}").click()`;
+      if (strategy === "TEXT") return `await session.get_by_text("${selector}").click()`;
+      if (strategy === "TEST_ID") return `await session.get_by_test_id("${selector}").click()`;
+      return `await session.locator("${strategy}", "${selector}").click()`;
+
+    case "java":
+      if (strategy === "ACCESSIBILITY_ID") return `session.getByAccessibilityID("${selector}").click();`;
+      if (strategy === "TEXT") return `session.getByText("${selector}").click();`;
+      if (strategy === "TEST_ID") return `session.getByTestID("${selector}").click();`;
+      return `session.locator("${strategy}", "${selector}").click();`;
+
+    case "csharp":
+      if (strategy === "ACCESSIBILITY_ID") return `await session.GetByAccessibilityID("${selector}").ClickAsync();`;
+      if (strategy === "TEXT") return `await session.GetByText("${selector}").ClickAsync();`;
+      if (strategy === "TEST_ID") return `await session.GetByTestID("${selector}").ClickAsync();`;
+      return `await session.Locator("${strategy}", "${selector}").ClickAsync();`;
+
+    default:
+      return `session.locator("${strategy}", "${selector}").click()`;
+  }
 }
 
-function addConsoleLog(message, type = '') {
+function resetPropertiesCard() {
+  domElements.nodeTag.textContent = "N/A";
+  domElements.nodeClass.textContent = "N/A";
+  domElements.nodeText.textContent = "N/A";
+  domElements.nodeResourceId.textContent = "N/A";
+  domElements.nodeDesc.textContent = "N/A";
+  domElements.nodeBounds.textContent = "N/A";
+  domElements.locatorInput.value = "";
+  domElements.aiLocatorText.textContent = "N/A";
+  domElements.aiReason.textContent = "Select an element to calculate options.";
+  domElements.generatedCodeBox.textContent = "Select an element to view code...";
+}
+
+function addConsoleLog(message, type = "") {
   const now = new Date();
-  const timeStr = now.toTimeString().split(' ')[0];
-  
-  const logDiv = document.createElement('div');
+  const timeStr = now.toTimeString().split(" ")[0];
+  const logDiv = document.createElement("div");
   logDiv.className = `log-line ${type}`;
   logDiv.textContent = `[${timeStr}] ${message}`;
-  
   domElements.logContent.appendChild(logDiv);
   domElements.logContent.scrollTop = domElements.logContent.scrollHeight;
+}
+
+function escapeHTML(str) {
+  if (!str) return "";
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }

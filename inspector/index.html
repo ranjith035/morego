@@ -604,6 +604,10 @@
     </div>
     
     <div class="controls-container">
+      <button id="refresh-btn" style="background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); margin-right: 10px; display: flex; align-items: center; justify-content: center; height: 36px; padding: 0 14px; border-radius: 6px; cursor: pointer; font-family: var(--font-main); font-weight: 600; gap: 6px;">
+        <span>🔄</span> <span>Refresh</span>
+      </button>
+
       <div class="btn-toggle-platform">
         <div class="platform-opt active" id="opt-android">Android</div>
         <div class="platform-opt" id="opt-ios">iOS</div>
@@ -611,10 +615,10 @@
       
       <div class="device-address-bar">
         <div class="indicator-dot"></div>
-        <span id="device-info-text">Pixel 6 Pro (ADB Connection: 127.0.0.1:5555)</span>
+        <span id="device-info-text">Xiaomi a5fb8bad (Active ADB Connection)</span>
       </div>
 
-      <div class="record-container">
+      <div class="record-container" style="display: none;">
         <button class="btn-record" id="record-btn">
           <div class="pulse-dot"></div>
           <span id="record-text">Recording</span>
@@ -638,41 +642,7 @@
     <div class="workspace-panel">
       <div class="panel-header">UI Hierarchy Tree</div>
       <div class="panel-content" id="hierarchy-tree-content">
-        <!-- Root node -->
-        <div class="tree-node" data-target="root">
-          <div class="tree-node-content">
-            <span>&lt;</span><span class="tree-tag">hierarchy</span><span class="tree-attr"> rotation</span>=<span>"0"</span><span>&gt;</span>
-          </div>
-          <div class="tree-children">
-            <div class="tree-node" data-target="container">
-              <div class="tree-node-content">
-                <span>&lt;</span><span class="tree-tag">node</span><span class="tree-attr"> class</span>=<span>"FrameLayout"</span><span class="tree-attr"> bounds</span>=<span>"[0,0][1080,1920]"</span><span>&gt;</span>
-              </div>
-              <div class="tree-children">
-                <div class="tree-node" data-target="title">
-                  <div class="tree-node-content" id="tree-title">
-                    <span>&lt;</span><span class="tree-tag">node</span><span class="tree-attr"> class</span>=<span>"TextView"</span><span class="tree-attr"> text</span>=<span>"Welcome Back"</span><span>/&gt;</span>
-                  </div>
-                </div>
-                <div class="tree-node" data-target="username">
-                  <div class="tree-node-content" id="tree-username">
-                    <span>&lt;</span><span class="tree-tag">node</span><span class="tree-attr"> class</span>=<span>"EditText"</span><span class="tree-attr"> resource-id</span>=<span>"username_field"</span><span class="tree-attr"> placeholder</span>=<span>"Username"</span><span>/&gt;</span>
-                  </div>
-                </div>
-                <div class="tree-node" data-target="password">
-                  <div class="tree-node-content" id="tree-password">
-                    <span>&lt;</span><span class="tree-tag">node</span><span class="tree-attr"> class</span>=<span>"EditText"</span><span class="tree-attr"> resource-id</span>=<span>"password_field"</span><span class="tree-attr"> placeholder</span>=<span>"Password"</span><span>/&gt;</span>
-                  </div>
-                </div>
-                <div class="tree-node" data-target="submit">
-                  <div class="tree-node-content" id="tree-submit">
-                    <span>&lt;</span><span class="tree-tag">node</span><span class="tree-attr"> class</span>=<span>"Button"</span><span class="tree-attr"> text</span>=<span>"Login"</span><span class="tree-attr"> content-desc</span>=<span>"Login button"</span><span>/&gt;</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div style="padding: 15px; color: var(--text-muted); font-size: 13px;">No active layout. Click Refresh to load.</div>
       </div>
     </div>
 
@@ -682,30 +652,8 @@
         <div class="phone-header-notch">
           <div class="notch-bar"></div>
         </div>
-        <div class="phone-screen" id="device-screen">
-          <div class="app-title">Welcome Back</div>
-          <div class="app-subtitle">Log in to your account</div>
-          
-          <div class="mock-input-group">
-            <span class="mock-label">USERNAME</span>
-            <input type="text" class="mock-input" placeholder="Enter username" disabled value="admin">
-            <!-- Overlay Highlight -->
-            <div class="element-highlight-box" style="top: 154px; left: 24px; width: 256px; height: 42px;" data-node="username" id="box-username"></div>
-          </div>
-
-          <div class="mock-input-group">
-            <span class="mock-label">PASSWORD</span>
-            <input type="password" class="mock-input" placeholder="••••••••" disabled value="password">
-            <!-- Overlay Highlight -->
-            <div class="element-highlight-box" style="top: 236px; left: 24px; width: 256px; height: 42px;" data-node="password" id="box-password"></div>
-          </div>
-
-          <button class="mock-btn" disabled>Login</button>
-          <!-- Overlay Highlight -->
-          <div class="element-highlight-box" style="top: 308px; left: 24px; width: 256px; height: 40px;" data-node="submit" id="box-submit"></div>
-          
-          <!-- Mock title Highlight -->
-          <div class="element-highlight-box" style="top: 60px; left: 24px; width: 256px; height: 32px;" data-node="title" id="box-title"></div>
+        <div class="phone-screen" id="device-screen" style="position: relative; background-size: contain; background-repeat: no-repeat; background-position: center; background-color: #000; display: block; padding: 0;">
+          <!-- Highlight overlays will be rendered here dynamically -->
         </div>
       </div>
     </div>
@@ -713,8 +661,25 @@
     <!-- Properties & Codegen -->
     <div class="workspace-panel right">
       <div class="panel-header">Details & Generated Code</div>
-      <div class="panel-content" style="display: flex; flex-direction: column; gap: 20px;">
+      <div class="panel-content" style="display: flex; flex-direction: column; gap: 15px;">
         
+        <!-- Element Properties Card -->
+        <div id="node-details-card" style="background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 8px;">
+          <div class="mock-label" style="margin-bottom: 5px; color: var(--accent-cyan); font-weight: 700; font-size: 11px;">ELEMENT PROPERTIES</div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="color: var(--text-muted);">Tag Name:</span> <span id="node-tag" style="font-family: var(--font-code); font-weight: 500;">N/A</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="color: var(--text-muted);">Class:</span> <span id="node-class" style="font-family: var(--font-code); max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">N/A</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="color: var(--text-muted);">Text:</span> <span id="node-text" style="max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">N/A</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="color: var(--text-muted);">Resource ID:</span> <span id="node-resource-id" style="font-family: var(--font-code); max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">N/A</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="color: var(--text-muted);">Content-Desc:</span> <span id="node-desc" style="max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">N/A</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="color: var(--text-muted);">Bounds:</span> <span id="node-bounds" style="font-family: var(--font-code);">N/A</span></div>
+          
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button id="action-tap" style="flex: 1; padding: 10px; background-color: var(--primary); border: none; border-radius: 6px; color: var(--text-main); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span>⚡</span> <span>Tap Element</span>
+            </button>
+          </div>
+        </div>
+
         <div>
           <div class="mock-label">Locator Search</div>
           <div class="locator-preview-box">
@@ -725,10 +690,10 @@
 
         <!-- AI healing suggestions card -->
         <div class="ai-card" id="ai-suggestion-box">
-          <div class="ai-confidence-badge">98% Confidence</div>
+          <div class="ai-confidence-badge" id="ai-confidence">98% Confidence</div>
           <div class="ai-card-title">✨ AI Locator Suggestion</div>
           <div class="ai-card-locator" id="ai-locator-text">GetByAccessibilityId("Login button")</div>
-          <div class="ai-card-reason">Matched Content Description 'Login button'. This tag is highly stable and conforms to accessibility-first standards.</div>
+          <div class="ai-card-reason" id="ai-reason">Select an element to calculate options.</div>
         </div>
 
         <div class="code-container">
@@ -736,8 +701,9 @@
             <span>GENERATED SDK SCRIPT</span>
             <span>READ ONLY</span>
           </div>
-          <pre class="code-block" id="generated-code-box">Loading generated script...</pre>
+          <pre class="code-block" id="generated-code-box">Select an element to view code...</pre>
         </div>
+      </div>     </div>
       </div>
     </div>
   </div>

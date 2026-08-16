@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -484,6 +487,118 @@ func mapAIStrategy(strategy string) pb.LocatorStrategy {
 	}
 }
 
+func startHTTPServer(srv *server) {
+	mux := http.NewServeMux()
+
+	// Serve the static files from the ./inspector directory
+	fs := http.FileServer(http.Dir("./inspector"))
+	mux.Handle("/", fs)
+
+	// API Endpoint to get the live XML source and Base64 screenshot
+	mux.HandleFunc("/api/session/state", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			return
+		}
+
+		srv.mu.Lock()
+		var sessionID string
+		for id := range srv.sessions {
+			sessionID = id
+			break
+		}
+		srv.mu.Unlock()
+
+		if sessionID == "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"error": "No active session found"}`))
+			return
+		}
+
+		srv.mu.Lock()
+		driver := srv.sessions[sessionID]
+		srv.mu.Unlock()
+
+		// 1. Fetch XML layout source
+		xmlData, err := driver.GetSource(r.Context(), "xml")
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": fmt.Sprintf("Failed to get layout source: %v", err)})
+			return
+		}
+
+		// 2. Fetch screenshot
+		imgBytes, err := driver.Screenshot(r.Context(), "")
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": fmt.Sprintf("Failed to get screenshot: %v", err)})
+			return
+		}
+
+		imgBase64 := base64.StdEncoding.EncodeToString(imgBytes)
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"sessionId":  sessionID,
+			"xml":        xmlData,
+			"screenshot": imgBase64,
+		})
+	})
+
+	// API Endpoint to trigger click at specific coordinates
+	mux.HandleFunc("/api/session/action/click", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			return
+		}
+
+		var req struct {
+			SessionID string `json:"sessionId"`
+			X         int    `json:"x"`
+			Y         int    `json:"y"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		srv.mu.Lock()
+		driver, exists := srv.sessions[req.SessionID]
+		srv.mu.Unlock()
+		if !exists {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"error": "Session not found"}`))
+			return
+		}
+
+		err := driver.ClickAt(r.Context(), req.X, req.Y)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{"success": true})
+	})
+
+	fmt.Println("Mobile Automation Web Inspector dashboard available at http://localhost:8082")
+	if err := http.ListenAndServe(":8082", mux); err != nil {
+		fmt.Printf("HTTP Server error: %v\n", err)
+	}
+}
+
 func main() {
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
@@ -496,6 +611,9 @@ func main() {
 	pb.RegisterSessionServiceServer(s, srv)
 	pb.RegisterDriverServiceServer(s, srv)
 	pb.RegisterAIServiceServer(s, srv)
+
+	// Start the Live Web Inspector HTTP server
+	go startHTTPServer(srv)
 
 	fmt.Println("Mobile Automation Server listening on gRPC port 50051...")
 	if err := s.Serve(lis); err != nil {
