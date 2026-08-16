@@ -68,6 +68,10 @@ func (b *BaseStub) ExecuteScript(ctx context.Context, script string, arguments [
 	return "result", nil
 }
 
+func (b *BaseStub) InjectKeyevent(ctx context.Context, keycode int) error {
+	return nil
+}
+
 // Concrete Driver Stubs
 
 type UiAutomator2Driver struct{ BaseStub }

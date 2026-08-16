@@ -324,3 +324,7 @@ func (d *CloudGridDriver) UninstallApp(ctx context.Context, appID string) error 
 func (d *CloudGridDriver) ExecuteScript(ctx context.Context, script string, arguments []string) (string, error) {
 	return "", errors.New("execute script is not supported on cloud driver")
 }
+
+func (d *CloudGridDriver) InjectKeyevent(ctx context.Context, keycode int) error {
+	return nil
+}

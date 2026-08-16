@@ -312,6 +312,10 @@ func (d *XCUITestDriver) ExecuteScript(ctx context.Context, script string, argum
 	return "", errors.New("execute script is not supported natively via WebDriverAgent")
 }
 
+func (d *XCUITestDriver) InjectKeyevent(ctx context.Context, keycode int) error {
+	return nil
+}
+
 func (d *XCUITestDriver) doRequest(ctx context.Context, method string, url string, body []byte) (*http.Response, error) {
 	var reader io.Reader
 	if body != nil {

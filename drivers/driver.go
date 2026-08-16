@@ -48,4 +48,7 @@ type Driver interface {
 
 	// ExecuteScript evaluates macros or scripts inside the runtime driver context.
 	ExecuteScript(ctx context.Context, script string, arguments []string) (string, error)
+
+	// InjectKeyevent sends key event triggers.
+	InjectKeyevent(ctx context.Context, keycode int) error
 }

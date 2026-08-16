@@ -367,3 +367,19 @@ func parseBoundsCenter(boundsStr string) (int, int, error) {
 
 	return centerX, centerY, nil
 }
+
+func (d *ADBDriver) InjectKeyevent(ctx context.Context, keycode int) error {
+	d.mu.Lock()
+	deviceID := d.deviceID
+	d.mu.Unlock()
+
+	if deviceID == "" {
+		return errors.New("adb driver is not connected")
+	}
+
+	cmd := exec.CommandContext(ctx, "adb", "-s", deviceID, "shell", "input", "keyevent", strconv.Itoa(keycode))
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to inject keyevent %d: %w", keycode, err)
+	}
+	return nil
+}

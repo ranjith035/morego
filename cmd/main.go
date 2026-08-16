@@ -593,6 +593,101 @@ func startHTTPServer(srv *server) {
 		json.NewEncoder(w).Encode(map[string]interface{}{"success": true})
 	})
 
+	// API Endpoint to trigger key event injection (Back, Home, Menu)
+	mux.HandleFunc("/api/session/action/key", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			return
+		}
+
+		var req struct {
+			SessionID string `json:"sessionId"`
+			KeyCode   int    `json:"keycode"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		srv.mu.Lock()
+		driver, exists := srv.sessions[req.SessionID]
+		srv.mu.Unlock()
+		if !exists {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"error": "Session not found"}`))
+			return
+		}
+
+		err := driver.InjectKeyevent(r.Context(), req.KeyCode)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{"success": true})
+	})
+
+	// API Endpoint to trigger element fill/type input
+	mux.HandleFunc("/api/session/action/fill", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			return
+		}
+
+		var req struct {
+			SessionID string `json:"sessionId"`
+			Bounds    string `json:"bounds"`
+			Value     string `json:"value"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		srv.mu.Lock()
+		driver, exists := srv.sessions[req.SessionID]
+		srv.mu.Unlock()
+		if !exists {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"error": "Session not found"}`))
+			return
+		}
+
+		// 1. Resolve elementID by bounds
+		elementID, err := driver.FindElement(r.Context(), "BOUNDS", req.Bounds)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": fmt.Sprintf("Failed to resolve element bounds: %v", err)})
+			return
+		}
+
+		// 2. Fill text value
+		err = driver.Fill(r.Context(), elementID, req.Value)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": fmt.Sprintf("Failed to fill input: %v", err)})
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{"success": true})
+	})
+
 	fmt.Println("Mobile Automation Web Inspector dashboard available at http://localhost:8082")
 	if err := http.ListenAndServe(":8082", mux); err != nil {
 		fmt.Printf("HTTP Server error: %v\n", err)

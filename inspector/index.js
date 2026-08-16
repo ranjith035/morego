@@ -18,6 +18,8 @@ const domElements = {
   nodeDesc: document.getElementById('node-desc'),
   nodeBounds: document.getElementById('node-bounds'),
   actionTap: document.getElementById('action-tap'),
+  actionFill: document.getElementById('action-fill'),
+  actionClear: document.getElementById('action-clear'),
   locatorInput: document.getElementById('locator-input'),
   aiConfidence: document.getElementById('ai-confidence'),
   aiLocatorText: document.getElementById('ai-locator-text'),
@@ -27,7 +29,11 @@ const domElements = {
   refreshBtn: document.getElementById('refresh-btn'),
   logContent: document.getElementById('log-content'),
   deviceInfoText: document.getElementById('device-info-text'),
-  searchMatchCount: document.getElementById('search-match-count')
+  searchMatchCount: document.getElementById('search-match-count'),
+  btnKeyBack: document.getElementById('btn-key-back'),
+  btnKeyHome: document.getElementById('btn-key-home'),
+  btnKeyApps: document.getElementById('btn-key-apps'),
+  btnCopyCode: document.getElementById('btn-copy-code')
 };
 
 // Initialize
@@ -45,6 +51,30 @@ domElements.languageSelect.addEventListener('change', (e) => {
   addConsoleLog(`SDK compilation target updated to ${selectedLanguage.toUpperCase()}`, "info");
 });
 
+// Copy script to clipboard
+domElements.btnCopyCode.addEventListener('click', () => {
+  const code = domElements.generatedCodeBox.textContent;
+  if (!code || code.startsWith("Select")) return;
+
+  navigator.clipboard.writeText(code).then(() => {
+    const originalText = domElements.btnCopyCode.innerHTML;
+    domElements.btnCopyCode.innerHTML = "✓ Copied!";
+    domElements.btnCopyCode.style.borderColor = "var(--accent-green)";
+    domElements.btnCopyCode.style.color = "var(--accent-green)";
+    
+    setTimeout(() => {
+      domElements.btnCopyCode.innerHTML = originalText;
+      domElements.btnCopyCode.style.borderColor = "var(--primary)";
+      domElements.btnCopyCode.style.color = "var(--text-main)";
+    }, 1500);
+    
+    addConsoleLog("Generated code snippet copied to clipboard.", "success");
+  }).catch(err => {
+    addConsoleLog(`Failed to copy to clipboard: ${err.message}`, "warn");
+  });
+});
+
+// Remote Tap action
 domElements.actionTap.addEventListener('click', async () => {
   if (!activeElement || !sessionId) return;
   const bounds = parseBounds(activeElement.bounds);
@@ -78,6 +108,97 @@ domElements.actionTap.addEventListener('click', async () => {
   }
 });
 
+// Remote Fill/Type action
+domElements.actionFill.addEventListener('click', async () => {
+  if (!activeElement || !sessionId) return;
+  const val = prompt("Enter text value to fill input field:");
+  if (val === null) return; // cancelled
+
+  addConsoleLog(`Sending Fill action with value "${val}" to bounds ${activeElement.bounds}...`, "info");
+  
+  try {
+    const resp = await fetch("/api/session/action/fill", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: sessionId,
+        bounds: activeElement.bounds,
+        value: val
+      })
+    });
+    
+    if (resp.ok) {
+      addConsoleLog(`Fill action injected successfully. Auto-refreshing in 1.5s...`, "success");
+      setTimeout(fetchLiveState, 1500);
+    } else {
+      const errData = await resp.json();
+      addConsoleLog(`Failed to inject text: ${errData.error}`, "warn");
+    }
+  } catch (err) {
+    addConsoleLog(`Error sending fill action: ${err.message}`, "warn");
+  }
+});
+
+// Remote Clear action
+domElements.actionClear.addEventListener('click', async () => {
+  if (!activeElement || !sessionId) return;
+
+  addConsoleLog(`Sending Clear action to input field...`, "info");
+  
+  try {
+    const resp = await fetch("/api/session/action/fill", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: sessionId,
+        bounds: activeElement.bounds,
+        value: ""
+      })
+    });
+    
+    if (resp.ok) {
+      addConsoleLog(`Input cleared successfully. Auto-refreshing in 1.5s...`, "success");
+      setTimeout(fetchLiveState, 1500);
+    } else {
+      const errData = await resp.json();
+      addConsoleLog(`Failed to clear field: ${errData.error}`, "warn");
+    }
+  } catch (err) {
+    addConsoleLog(`Error sending clear action: ${err.message}`, "warn");
+  }
+});
+
+// Remote Toolbar Key Events (Back, Home, App Switch)
+domElements.btnKeyBack.addEventListener('click', () => sendRemoteKey(4, "BACK"));
+domElements.btnKeyHome.addEventListener('click', () => sendRemoteKey(3, "HOME"));
+domElements.btnKeyApps.addEventListener('click', () => sendRemoteKey(187, "APP_SWITCH"));
+
+async function sendRemoteKey(keycode, keyName) {
+  if (!sessionId) return;
+  addConsoleLog(`Sending Key event ${keyName} (${keycode}) to physical device...`, "info");
+  
+  try {
+    const resp = await fetch("/api/session/action/key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: sessionId,
+        keycode: keycode
+      })
+    });
+    
+    if (resp.ok) {
+      addConsoleLog(`Key event ${keyName} injected successfully. Auto-refreshing in 1.5s...`, "success");
+      setTimeout(fetchLiveState, 1500);
+    } else {
+      const errData = await resp.json();
+      addConsoleLog(`Failed to inject key: ${errData.error}`, "warn");
+    }
+  } catch (err) {
+    addConsoleLog(`Error sending keyevent: ${err.message}`, "warn");
+  }
+}
+
 // Locator search panel input evaluator
 domElements.locatorInput.addEventListener('input', (e) => {
   const query = e.target.value.trim();
@@ -87,11 +208,9 @@ domElements.locatorInput.addEventListener('input', (e) => {
     return;
   }
 
-  // If query starts with '/' or '(', evaluate as an XPath expression
   if (query.startsWith('/') || query.startsWith('(')) {
     evaluateXPath(query);
   } else {
-    // Otherwise fallback to property text search
     evaluateTextSearch(query);
   }
 });
@@ -136,11 +255,7 @@ async function fetchLiveState() {
       }
     }
     
-    // Scale screen element container to match device aspect ratio
-    const screenHeight = 552; // fixed frame height
-    const screenWidth = Math.round(screenHeight * (physicalWidth / physicalHeight));
-    domElements.deviceScreen.style.width = `${screenWidth}px`;
-    domElements.deviceScreen.style.height = `${screenHeight}px`;
+    // Scale screen container is handled automatically by CSS (100% width/height of the phone frame)
 
     // Clear highlights overlay, nodes caches and properties panel
     domElements.deviceScreen.innerHTML = "";
@@ -180,6 +295,18 @@ function parseBounds(boundsStr) {
   };
 }
 
+// Generate stylized badge labels prefix matching widget tags
+function getClassBadge(className) {
+  const shortName = className.split(".").pop() || className;
+  if (shortName.includes("TextView")) return `<span style="color: #60a5fa; font-weight: bold; margin-right: 4px;" title="TextView">[T]</span>`;
+  if (shortName.includes("Button")) return `<span style="color: #c084fc; font-weight: bold; margin-right: 4px;" title="Button">[B]</span>`;
+  if (shortName.includes("EditText")) return `<span style="color: #fb923c; font-weight: bold; margin-right: 4px;" title="InputField">[E]</span>`;
+  if (shortName.includes("ImageView")) return `<span style="color: #4ade80; font-weight: bold; margin-right: 4px;" title="Image">[I]</span>`;
+  if (shortName.includes("CheckBox") || shortName.includes("Switch")) return `<span style="color: #22d3ee; font-weight: bold; margin-right: 4px;" title="Checkbox/Switch">[C]</span>`;
+  if (shortName.includes("Layout") || shortName.includes("View")) return `<span style="color: #9ca3af; margin-right: 4px;" title="Container">[L]</span>`;
+  return "";
+}
+
 // Recursively parse layout tree and append to DOM elements
 function renderTree(xmlNode, parentDOM) {
   const tagName = xmlNode.tagName;
@@ -202,7 +329,7 @@ function renderTree(xmlNode, parentDOM) {
   const contentDiv = document.createElement("div");
   contentDiv.className = "tree-node-content";
 
-  let labelText = `<span class="tree-tag">${shortClassName}</span>`;
+  let labelText = `${getClassBadge(className)}<span class="tree-tag">${shortClassName}</span>`;
   if (resourceId) {
     labelText += ` <span class="tree-attr">id</span>="${escapeHTML(resourceId.split("/").pop())}"`;
   }
@@ -224,7 +351,7 @@ function renderTree(xmlNode, parentDOM) {
     bounds: bounds
   };
 
-  // Register in global nodeMap first
+  // Register in global nodeMap
   const mapItem = { elementData, treeNode, contentDiv, overlayBox: null };
   nodeMap.set(xmlNode, mapItem);
 
@@ -253,7 +380,6 @@ function renderTree(xmlNode, parentDOM) {
   });
 
   if (hasChildren) {
-    // Add expand/collapse arrow toggle
     const toggleBtn = document.createElement("span");
     toggleBtn.className = "tree-node-toggle";
     toggleBtn.textContent = "▼";
@@ -391,7 +517,7 @@ function updatePropertiesAndCode(elementData) {
   domElements.aiReason.textContent = reason;
 
   // Generate code block
-  domElements.generatedCodeBox.textContent = getSDKCodeSnippet(strategy, selector, selectedLanguage);
+  domElements.generatedCodeBox.innerHTML = highlightSyntax(getSDKCodeSnippet(strategy, selector, selectedLanguage));
 }
 
 function formatLocatorDisplay(strategy, selector) {
@@ -444,6 +570,16 @@ function getSDKCodeSnippet(strategy, selector, language) {
     default:
       return `session.locator("${strategy}", "${selector}").click()`;
   }
+}
+
+// Simple client-side code syntax highlighter using spans
+function highlightSyntax(code) {
+  if (!code) return "";
+  return code
+    .replace(/(await|const|var|let|function|return|import|from|class|public|static|void|package|import|suspend)/g, '<span style="color: #c084fc;">$1</span>')
+    .replace(/(session|device|err|ctx)/g, '<span style="color: #60a5fa;">$1</span>')
+    .replace(/(\.click|\.fill|\.locator|\.getByText|\.getByAccessibilityID|\.getByTestID|\.GetByAccessibilityID|\.GetByText|\.GetByTestID|\.Locator|\.Click|\.Fill|\.get_by_accessibility_id|\.get_by_text|\.get_by_test_id)/g, '<span style="color: #22d3ee;">$1</span>')
+    .replace(/(".*?"|'.*?')/g, '<span style="color: #34d399;">$1</span>');
 }
 
 // Evaluate typed XPath expression directly on parsed XML DOM tree

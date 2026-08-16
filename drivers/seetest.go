@@ -290,3 +290,7 @@ func (d *SeeTestDriver) UninstallApp(ctx context.Context, appID string) error {
 func (d *SeeTestDriver) ExecuteScript(ctx context.Context, script string, arguments []string) (string, error) {
 	return "", errors.New("execute script is not supported on SeeTest cloud driver")
 }
+
+func (d *SeeTestDriver) InjectKeyevent(ctx context.Context, keycode int) error {
+	return nil
+}

@@ -249,19 +249,21 @@
     /* Device Canvas Simulator */
     .device-viewport {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       background-color: var(--bg-darker);
+      gap: 12px;
+      padding: 10px 0;
       height: 100%;
-      padding: 20px;
     }
 
     .phone-frame {
-      width: 320px;
-      height: 600px;
+      width: 250px;
+      height: 485px;
       background-color: #111;
       border: 8px solid #2d3039;
-      border-radius: 36px;
+      border-radius: 28px;
       box-shadow: 0 20px 50px rgba(0,0,0,0.6);
       position: relative;
       overflow: hidden;
@@ -668,11 +670,18 @@
 
     <!-- Live Element Canvas -->
     <div class="device-viewport">
+      <!-- Remote Keys Toolbar -->
+      <div style="display: flex; gap: 15px; background: rgba(38, 42, 55, 0.8); border: 1px solid var(--border-color); padding: 8px 18px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); backdrop-filter: blur(12px); z-index: 10;">
+        <button id="btn-key-back" title="Back" style="background: none; border: none; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">↩️</button>
+        <button id="btn-key-home" title="Home" style="background: none; border: none; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">🏠</button>
+        <button id="btn-key-apps" title="Recent Apps" style="background: none; border: none; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">📋</button>
+      </div>
+
       <div class="phone-frame">
         <div class="phone-header-notch">
           <div class="notch-bar"></div>
         </div>
-        <div class="phone-screen" id="device-screen" style="position: relative; background-size: contain; background-repeat: no-repeat; background-position: center; background-color: #000; display: block; padding: 0;">
+        <div class="phone-screen" id="device-screen" style="position: relative; background-size: 100% 100%; background-repeat: no-repeat; background-position: center; background-color: #000; display: block; padding: 0; width: 100%; height: 100%;">
           <!-- Highlight overlays will be rendered here dynamically -->
         </div>
       </div>
@@ -693,9 +702,15 @@
           <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="color: var(--text-muted);">Content-Desc:</span> <span id="node-desc" style="max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">N/A</span></div>
           <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="color: var(--text-muted);">Bounds:</span> <span id="node-bounds" style="font-family: var(--font-code);">N/A</span></div>
           
-          <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button id="action-tap" style="flex: 1; padding: 10px; background-color: var(--primary); border: none; border-radius: 6px; color: var(--text-main); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-              <span>⚡</span> <span>Tap Element</span>
+          <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <button id="action-tap" style="flex: 1; padding: 10px; background-color: var(--primary); border: none; border-radius: 6px; color: var(--text-main); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+              <span>⚡</span> <span>Tap</span>
+            </button>
+            <button id="action-fill" style="flex: 1; padding: 10px; background-color: var(--accent-cyan); border: none; border-radius: 6px; color: var(--bg-darker); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+              <span>✏️</span> <span>Fill</span>
+            </button>
+            <button id="action-clear" style="flex: 1; padding: 10px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+              <span>🧹</span> <span>Clear</span>
             </button>
           </div>
         </div>
@@ -720,9 +735,9 @@
         </div>
 
         <div class="code-container">
-          <div class="code-header">
+          <div class="code-header" style="display: flex; justify-content: space-between; align-items: center;">
             <span>GENERATED SDK SCRIPT</span>
-            <span>READ ONLY</span>
+            <button id="btn-copy-code" style="background: rgba(124, 58, 237, 0.25); border: 1px solid var(--primary); color: var(--text-main); border-radius: 4px; font-size: 10px; padding: 2px 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='var(--primary)'" onmouseout="this.style.background='rgba(124, 58, 237, 0.25)'">📋 Copy</button>
           </div>
           <pre class="code-block" id="generated-code-box">Select an element to view code...</pre>
         </div>
