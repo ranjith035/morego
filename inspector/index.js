@@ -4,6 +4,8 @@ let physicalWidth = 1080;
 let physicalHeight = 2400;
 let selectedLanguage = "typescript";
 let activeElement = null;
+let xmlDoc = null; // Globally cached active DOM Document object
+const nodeMap = new Map(); // Map of xmlNodes -> { elementData, treeNode, contentDiv, overlayBox }
 
 // DOM Cache
 const domElements = {
@@ -24,11 +26,12 @@ const domElements = {
   languageSelect: document.getElementById('language-select'),
   refreshBtn: document.getElementById('refresh-btn'),
   logContent: document.getElementById('log-content'),
-  deviceInfoText: document.getElementById('device-info-text')
+  deviceInfoText: document.getElementById('device-info-text'),
+  searchMatchCount: document.getElementById('search-match-count')
 };
 
 // Initialize
-addConsoleLog("Live Web Inspector initialized. Ready to sync with Go Core server.", "info");
+addConsoleLog("MoreGo Inspector initialized. Ready to sync with Go Core server.", "info");
 fetchLiveState();
 
 // Event Listeners
@@ -75,6 +78,24 @@ domElements.actionTap.addEventListener('click', async () => {
   }
 });
 
+// Locator search panel input evaluator
+domElements.locatorInput.addEventListener('input', (e) => {
+  const query = e.target.value.trim();
+  if (!query) {
+    clearHighlights();
+    domElements.searchMatchCount.textContent = "";
+    return;
+  }
+
+  // If query starts with '/' or '(', evaluate as an XPath expression
+  if (query.startsWith('/') || query.startsWith('(')) {
+    evaluateXPath(query);
+  } else {
+    // Otherwise fallback to property text search
+    evaluateTextSearch(query);
+  }
+});
+
 // Fetch layout XML and Base64 screenshot from server
 async function fetchLiveState() {
   addConsoleLog("Syncing layout hierarchy and screen graphics from target device...", "info");
@@ -99,12 +120,11 @@ async function fetchLiveState() {
     
     // 3. Parse XML Tree
     const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(data.xml, "text/xml");
+    xmlDoc = parser.parseFromString(data.xml, "text/xml");
     
     // 4. Extract physical dimensions from root hierarchy bounds if available
     const rootNode = xmlDoc.getElementsByTagName("hierarchy")[0];
     if (rootNode) {
-      // Find children with bounds to get physical width/height
       const childNodes = xmlDoc.getElementsByTagName("node");
       for (let i = 0; i < childNodes.length; i++) {
         const bStr = childNodes[i].getAttribute("bounds");
@@ -122,10 +142,13 @@ async function fetchLiveState() {
     domElements.deviceScreen.style.width = `${screenWidth}px`;
     domElements.deviceScreen.style.height = `${screenHeight}px`;
 
-    // Clear highlights overlay and hierarchy panel
+    // Clear highlights overlay, nodes caches and properties panel
     domElements.deviceScreen.innerHTML = "";
     domElements.treeContent.innerHTML = "";
+    nodeMap.clear();
     activeElement = null;
+    domElements.searchMatchCount.textContent = "";
+    domElements.locatorInput.value = "";
     resetPropertiesCard();
 
     // 5. Render layout tree and overlays recursively
@@ -201,16 +224,20 @@ function renderTree(xmlNode, parentDOM) {
     bounds: bounds
   };
 
+  // Register in global nodeMap first
+  const mapItem = { elementData, treeNode, contentDiv, overlayBox: null };
+  nodeMap.set(xmlNode, mapItem);
+
   // Generate highlights box overlay
   const parsedBounds = parseBounds(bounds);
-  let overlayBox = null;
   if (parsedBounds && parsedBounds.width > 0 && parsedBounds.height > 0) {
-    overlayBox = createOverlayBox(elementData, parsedBounds, treeNode, contentDiv);
+    const box = createOverlayBox(elementData, parsedBounds, treeNode, contentDiv);
+    mapItem.overlayBox = box;
   }
 
   contentDiv.addEventListener("click", (e) => {
     e.stopPropagation();
-    selectNode(elementData, treeNode, contentDiv, overlayBox);
+    selectNode(elementData, treeNode, contentDiv, mapItem.overlayBox);
   });
 
   // Recursively append children nodes
@@ -226,8 +253,31 @@ function renderTree(xmlNode, parentDOM) {
   });
 
   if (hasChildren) {
+    // Add expand/collapse arrow toggle
+    const toggleBtn = document.createElement("span");
+    toggleBtn.className = "tree-node-toggle";
+    toggleBtn.textContent = "▼";
+    toggleBtn.style.marginRight = "4px";
+    toggleBtn.style.fontSize = "10px";
+    toggleBtn.style.color = "var(--text-muted)";
+    
+    toggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (childrenContainer.style.display === "none") {
+        childrenContainer.style.display = "block";
+        toggleBtn.textContent = "▼";
+        toggleBtn.style.transform = "rotate(0deg)";
+      } else {
+        childrenContainer.style.display = "none";
+        toggleBtn.textContent = "▶";
+        toggleBtn.style.transform = "rotate(-90deg)";
+      }
+    });
+
+    contentDiv.insertBefore(toggleBtn, contentDiv.firstChild);
     treeNode.appendChild(childrenContainer);
   }
+  
   parentDOM.appendChild(treeNode);
 }
 
@@ -282,6 +332,8 @@ function selectNode(elementData, treeNode, contentDiv, overlayBox) {
   let parent = treeNode.parentElement;
   while (parent && parent.className === "tree-children") {
     parent.style.display = "block";
+    const siblingToggle = parent.parentElement.querySelector(".tree-node-toggle");
+    if (siblingToggle) siblingToggle.textContent = "▼";
     parent = parent.parentElement.parentElement;
   }
 
@@ -324,7 +376,6 @@ function updatePropertiesAndCode(elementData) {
     confidence = "90%";
     reason = "Platform layout resource ID found. Subject to vendor modification.";
   } else {
-    // Generate simple XPath fallback
     strategy = "XPATH";
     selector = `//${elementData.tagName || "node"}[@class='${elementData.className}']`;
     confidence = "60%";
@@ -359,7 +410,6 @@ function formatLocatorDisplay(strategy, selector) {
 }
 
 function getSDKCodeSnippet(strategy, selector, language) {
-  const isClickable = true; // Default to click action generator
   switch (language) {
     case "typescript":
       if (strategy === "ACCESSIBILITY_ID") return `await session.getByAccessibilityID("${selector}").click();`;
@@ -394,6 +444,55 @@ function getSDKCodeSnippet(strategy, selector, language) {
     default:
       return `session.locator("${strategy}", "${selector}").click()`;
   }
+}
+
+// Evaluate typed XPath expression directly on parsed XML DOM tree
+function evaluateXPath(xpathQuery) {
+  clearHighlights();
+  if (!xmlDoc) return;
+
+  try {
+    const results = xmlDoc.evaluate(xpathQuery, xmlDoc, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+    const count = results.snapshotLength;
+    domElements.searchMatchCount.textContent = `${count} match${count === 1 ? '' : 'es'}`;
+
+    for (let i = 0; i < count; i++) {
+      const xmlNode = results.snapshotItem(i);
+      const item = nodeMap.get(xmlNode);
+      if (item) {
+        if (item.overlayBox) item.overlayBox.classList.add('search-match');
+        if (item.contentDiv) item.contentDiv.classList.add('search-match');
+      }
+    }
+  } catch (err) {
+    domElements.searchMatchCount.textContent = "Syntax Error";
+  }
+}
+
+// Evaluate text-based substring searches across XML elements attributes
+function evaluateTextSearch(query) {
+  clearHighlights();
+  const lowerQuery = query.toLowerCase();
+  let matchCount = 0;
+
+  nodeMap.forEach((item, xmlNode) => {
+    const matches = (xmlNode.getAttribute("class") || "").toLowerCase().includes(lowerQuery) ||
+                    (xmlNode.getAttribute("text") || "").toLowerCase().includes(lowerQuery) ||
+                    (xmlNode.getAttribute("resource-id") || "").toLowerCase().includes(lowerQuery) ||
+                    (xmlNode.getAttribute("content-desc") || "").toLowerCase().includes(lowerQuery);
+    if (matches) {
+      matchCount++;
+      if (item.overlayBox) item.overlayBox.classList.add('search-match');
+      if (item.contentDiv) item.contentDiv.classList.add('search-match');
+    }
+  });
+
+  domElements.searchMatchCount.textContent = `${matchCount} match${matchCount === 1 ? '' : 'es'}`;
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.element-highlight-box').forEach(el => el.classList.remove('search-match'));
+  document.querySelectorAll('.tree-node-content').forEach(el => el.classList.remove('search-match'));
 }
 
 function resetPropertiesCard() {

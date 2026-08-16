@@ -366,6 +366,26 @@
       background-color: rgba(124, 58, 237, 0.25);
     }
 
+    .element-highlight-box.search-match {
+      border-color: var(--accent-cyan) !important;
+      background-color: rgba(6, 182, 212, 0.25) !important;
+      z-index: 10;
+    }
+
+    .tree-node-content.search-match {
+      border-left: 3px solid var(--accent-cyan) !important;
+      background-color: rgba(6, 182, 212, 0.1) !important;
+    }
+
+    .tree-node-toggle {
+      user-select: none;
+      display: inline-block;
+      width: 12px;
+      text-align: center;
+      transition: transform 0.1s;
+      cursor: pointer;
+    }
+
     /* Hierarchy Tree View */
     .tree-node {
       font-family: var(--font-code);
@@ -681,10 +701,13 @@
         </div>
 
         <div>
-          <div class="mock-label">Locator Search</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="mock-label">Locator Search</div>
+            <span id="search-match-count" style="font-size: 11px; color: var(--accent-cyan); font-weight: 600; font-family: var(--font-code);"></span>
+          </div>
           <div class="locator-preview-box">
             <span>🔎</span>
-            <input type="text" class="locator-preview-input" id="locator-input" placeholder="Enter selector (e.g. GetByText('Login'))">
+            <input type="text" class="locator-preview-input" id="locator-input" placeholder="Enter XPath or selector (e.g. //node[@text='7'])">
           </div>
         </div>
 
